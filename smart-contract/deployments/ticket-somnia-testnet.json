@@ -1,0 +1,17 @@
+{
+  "network": "somnia-testnet",
+  "chainId": 50312,
+  "deployer": "0x3bfbe4e3dcc472e9b1bdfc0c177de3459cf769bf",
+  "deploymentTime": "2025-09-13T17:37:25.840Z",
+  "transactionHash": "0x24b0a6131d252491260b09d0a0ad9d71326f1929670cea8f21ad64eeee884cbb",
+  "contracts": {
+    "Ticket": {
+      "address": "0x9c8447b583dc5ff7a25289ca1f7dd6637ff81955",
+      "constructorArgs": [
+        "EventX Tickets",
+        "EVTX"
+      ],
+      "owner": "0x3BFbE4E3dCC472E9B1bdFC0c177dE3459Cf769bf"
+    }
+  }
+}
