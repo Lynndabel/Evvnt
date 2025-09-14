@@ -12,6 +12,7 @@ interface UseBlockchainIntegrationReturn {
   getTotalOccassions: () => Promise<number>;
   getTotalSupply: () => Promise<number>;
   getRegistrationsForEvent: (eventId: number) => Promise<Array<{ tokenId: number; owner: string; seatNumber: number }>>;
+  getTicketsByOwner: (owner: string) => Promise<Array<{ tokenId: number; occasionId: number; seatNumber: number }>>;
   isLoading: boolean;
   error: string | null;
 }
@@ -89,6 +90,25 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     } catch (err: any) {
       console.error('Error fetching total occasions:', err);
       return 0;
+    }
+  }, [getReadContract]);
+
+  const getTicketsByOwner = useCallback(async (owner: string): Promise<Array<{ tokenId: number; occasionId: number; seatNumber: number }>> => {
+    try {
+      const contract = getReadContract();
+      const total = await contract.totalSupply();
+      const mine: Array<{ tokenId: number; occasionId: number; seatNumber: number }> = [];
+      for (let tokenId = 1; tokenId <= Number(total); tokenId++) {
+        const currentOwner = await contract.ownerOf(tokenId);
+        if (currentOwner.toLowerCase() === owner.toLowerCase()) {
+          const details = await contract.getTicketDetails(tokenId);
+          mine.push({ tokenId, occasionId: Number(details.occasionId), seatNumber: Number(details.seatNumber) });
+        }
+      }
+      return mine;
+    } catch (err: any) {
+      console.error('Error fetching tickets by owner:', err);
+      return [];
     }
   }, [getReadContract]);
 
@@ -216,6 +236,7 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     getTotalOccassions,
     getTotalSupply,
     getRegistrationsForEvent,
+    getTicketsByOwner,
     isLoading,
     error
   };

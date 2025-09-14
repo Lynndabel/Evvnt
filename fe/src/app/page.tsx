@@ -160,7 +160,9 @@ export default function Home() {
     }
   };
 
-  const organizerEvents = events.filter(event => event.organizer === userAddress);
+  const organizerEvents = isConnected && userAddress
+    ? events.filter(event => event.organizer?.toLowerCase() === userAddress.toLowerCase())
+    : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
