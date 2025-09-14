@@ -19,6 +19,7 @@ export default function MyTicketsPage() {
   const [loading, setLoading] = useState(false);
   const [tickets, setTickets] = useState<OwnedTicket[]>([]);
   const { getTicketsByOwner, getEventDetails } = useBlockchainIntegration();
+  const [origin, setOrigin] = useState<string>("");
 
   const handleConnect = async (address: string) => {
     setWalletAddress(address);
@@ -48,6 +49,12 @@ export default function MyTicketsPage() {
       loadTickets(walletAddress);
     }
   }, [isConnected, walletAddress]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -116,6 +123,42 @@ export default function MyTicketsPage() {
                     )}
                     <div className="mt-4 text-sm text-gray-500">
                       <p>Event ID: {t.occasionId}</p>
+                    </div>
+
+                    {/* Verification QR & Link */}
+                    <div className="mt-4 flex items-start gap-4">
+                      <div className="border rounded p-2 bg-white">
+                        {/* Generate QR without deps using external service */}
+                        {origin && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            alt={`QR for ticket #${t.tokenId}`}
+                            width={180}
+                            height={180}
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${origin}/verify?tokenId=${t.tokenId}&eventId=${t.occasionId}`)}`}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-700 font-medium mb-1">Verification Link</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            className="w-full border rounded px-2 py-1 text-sm"
+                            readOnly
+                            value={origin ? `${origin}/verify?tokenId=${t.tokenId}&eventId=${t.occasionId}` : `/verify?tokenId=${t.tokenId}&eventId=${t.occasionId}`}
+                          />
+                          <button
+                            onClick={() => {
+                              const url = origin ? `${origin}/verify?tokenId=${t.tokenId}&eventId=${t.occasionId}` : `/verify?tokenId=${t.tokenId}&eventId=${t.occasionId}`;
+                              navigator.clipboard.writeText(url);
+                            }}
+                            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Show this QR or link at entry for instant on-chain verification.</p>
+                      </div>
                     </div>
                   </div>
                 ))}

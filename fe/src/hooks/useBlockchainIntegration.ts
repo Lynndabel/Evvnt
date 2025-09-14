@@ -13,6 +13,8 @@ interface UseBlockchainIntegrationReturn {
   getTotalSupply: () => Promise<number>;
   getRegistrationsForEvent: (eventId: number) => Promise<Array<{ tokenId: number; owner: string; seatNumber: number }>>;
   getTicketsByOwner: (owner: string) => Promise<Array<{ tokenId: number; occasionId: number; seatNumber: number }>>;
+  getOwnerOf: (tokenId: number) => Promise<string>;
+  getTicketDetailsById: (tokenId: number) => Promise<{ occasionId: number; seatNumber: number; isForSale: boolean; resalePrice: bigint; originalOwner: string } | null>;
   isLoading: boolean;
   error: string | null;
 }
@@ -90,6 +92,36 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     } catch (err: any) {
       console.error('Error fetching total occasions:', err);
       return 0;
+    }
+  }, [getReadContract]);
+
+  const getTicketDetailsById = useCallback(async (
+    tokenId: number
+  ): Promise<{ occasionId: number; seatNumber: number; isForSale: boolean; resalePrice: bigint; originalOwner: string } | null> => {
+    try {
+      const contract = getReadContract();
+      const details = await contract.getTicketDetails(tokenId);
+      return {
+        occasionId: Number(details.occasionId),
+        seatNumber: Number(details.seatNumber),
+        isForSale: Boolean(details.isForSale),
+        resalePrice: details.resalePrice as bigint,
+        originalOwner: details.originalOwner as string,
+      };
+    } catch (err: any) {
+      console.error('Error fetching ticket details by id:', err);
+      return null;
+    }
+  }, [getReadContract]);
+
+  const getOwnerOf = useCallback(async (tokenId: number): Promise<string> => {
+    try {
+      const contract = getReadContract();
+      const owner = await contract.ownerOf(tokenId);
+      return owner as string;
+    } catch (err: any) {
+      console.error('Error fetching ownerOf:', err);
+      return "";
     }
   }, [getReadContract]);
 
@@ -237,6 +269,8 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     getTotalSupply,
     getRegistrationsForEvent,
     getTicketsByOwner,
+    getOwnerOf,
+    getTicketDetailsById,
     isLoading,
     error
   };
