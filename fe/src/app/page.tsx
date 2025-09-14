@@ -39,19 +39,23 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        const total = await getTotalOccassions();
-        const loaded: Event[] = [];
-        for (let i = 1; i <= total; i++) {
-          const ev = await getEventDetails(i);
-          if (ev) loaded.push(ev);
-        }
-        setEvents(loaded);
+        await reloadEvents();
       } catch (e) {
         console.error('Failed to load events from chain', e);
       }
     };
     load();
   }, [getTotalOccassions, getEventDetails]);
+
+  const reloadEvents = async () => {
+    const total = await getTotalOccassions();
+    const loaded: Event[] = [];
+    for (let i = 1; i <= total; i++) {
+      const ev = await getEventDetails(i);
+      if (ev) loaded.push(ev);
+    }
+    setEvents(loaded);
+  };
 
   const handleWalletConnect = async (address: string) => {
     setIsConnected(true);
@@ -90,6 +94,8 @@ export default function Home() {
         if (refreshed) {
           setEvents(prev => prev.map(ev => ev.id === refreshed.id ? refreshed : ev));
         }
+        // Slight delay then full reload to ensure consistency across views
+        setTimeout(() => { reloadEvents(); }, 1500);
         setSelectedEvent(null);
         alert(`Ticket purchased successfully!${tokenPart}`);
       } else {
@@ -139,6 +145,8 @@ export default function Home() {
           };
           setEvents(prev => [...prev, fallback]);
         }
+        // Slight delay then full reload to ensure consistency
+        setTimeout(() => { reloadEvents(); }, 1500);
         setShowCreateModal(false);
         alert('Event created successfully! Transaction confirmed on blockchain.');
       } else {

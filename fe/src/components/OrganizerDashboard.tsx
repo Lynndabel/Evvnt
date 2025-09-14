@@ -54,9 +54,10 @@ export default function OrganizerDashboard({
   }
 
   const totalEvents = organizerEvents.length;
-  const totalTicketsSold = organizerEvents.reduce((sum, event) => sum + event.tickets, 0);
+  // tickets represents AVAILABLE. Compute sold per event as (maxTickets - tickets)
+  const totalTicketsSold = organizerEvents.reduce((sum, event) => sum + (event.maxTickets - event.tickets), 0);
   const totalRevenue = organizerEvents.reduce((sum, event) => 
-    sum + (Number(event.price) * event.tickets), 0
+    sum + (Number(event.price) * (event.maxTickets - event.tickets)), 0
   );
 
   return (
@@ -177,7 +178,7 @@ export default function OrganizerDashboard({
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Sold</p>
-                          <p className="font-semibold">{event.tickets}/{event.maxTickets}</p>
+                          <p className="font-semibold">{event.maxTickets - event.tickets}/{event.maxTickets}</p>
                           <p className="text-sm text-green-600">{formatPrice(event.price)} ETH</p>
                         </div>
                       </div>
@@ -224,13 +225,13 @@ export default function OrganizerDashboard({
                     
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-sm text-gray-500">Tickets Sold</span>
-                      <span className="font-semibold">{event.tickets}/{event.maxTickets}</span>
+                      <span className="font-semibold">{event.maxTickets - event.tickets}/{event.maxTickets}</span>
                     </div>
                     
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                       <div 
                         className="bg-blue-600 h-2 rounded-full" 
-                        style={{ width: `${(event.tickets / event.maxTickets) * 100}%` }}
+                        style={{ width: `${((event.maxTickets - event.tickets) / event.maxTickets) * 100}%` }}
                       ></div>
                     </div>
                     
@@ -328,18 +329,18 @@ export default function OrganizerDashboard({
                         <div className="flex justify-between items-center mb-2">
                           <h5 className="font-medium text-gray-900">{event.title}</h5>
                           <span className="text-sm text-gray-500">
-                            {Math.round((event.tickets / event.maxTickets) * 100)}% sold
+                            {Math.round(((event.maxTickets - event.tickets) / event.maxTickets) * 100)}% sold
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full" 
-                            style={{ width: `${(event.tickets / event.maxTickets) * 100}%` }}
+                            style={{ width: `${((event.maxTickets - event.tickets) / event.maxTickets) * 100}%` }}
                           ></div>
                         </div>
                         <div className="flex justify-between text-sm text-gray-600">
-                          <span>{event.tickets} sold of {event.maxTickets}</span>
-                          <span>Revenue: {((Number(event.price) * event.tickets) / 1e18).toFixed(4)} ETH</span>
+                          <span>{event.maxTickets - event.tickets} sold of {event.maxTickets}</span>
+                          <span>Revenue: {((Number(event.price) * (event.maxTickets - event.tickets)) / 1e18).toFixed(4)} ETH</span>
                         </div>
                       </div>
                     ))}
