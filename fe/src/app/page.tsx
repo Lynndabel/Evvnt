@@ -194,6 +194,9 @@ export default function Home() {
                   Organizer Dashboard
                 </button>
               )}
+              <Link href="/my-tickets" className="text-gray-500 hover:text-blue-600">
+                My Tickets
+              </Link>
               <Link href="/about" className="text-gray-500 hover:text-blue-600">
                 About
               </Link>
