@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useState } from 'react';
+import { uploadToIPFS } from '@/lib/ipfs';
 import LocationPicker from './LocationPicker';
 
 interface CreateEventModalProps {
@@ -19,6 +20,7 @@ interface EventFormData {
   time: string;
   location: string;
   maxResalePrice: string;
+  imageUrl?: string;
 }
 
 export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: CreateEventModalProps) {
@@ -30,10 +32,12 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
     date: '',
     time: '',
     location: '',
-    maxResalePrice: ''
+    maxResalePrice: '',
+    imageUrl: ''
   });
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({});
+  const [uploading, setUploading] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<EventFormData> = {};
@@ -215,6 +219,42 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
               {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
             </div>
 
+            {/* Event Flyer (Image Upload) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Event Flyer (Image)
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    try {
+                      const url = await uploadToIPFS(file);
+                      setFormData(prev => ({ ...prev, imageUrl: url }));
+                    } catch (err) {
+                      console.error('Image upload failed', err);
+                      alert('Image upload failed. Please try again.');
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                />
+                {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
+              </div>
+              {formData.imageUrl && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={formData.imageUrl} alt="Event flyer preview" className="w-48 h-32 object-cover rounded border" />
+                  <p className="text-xs text-gray-500 mt-1 break-all">{formData.imageUrl}</p>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Image will be uploaded to IPFS (Web3.Storage). Configure your token in NEXT_PUBLIC_WEB3_STORAGE_TOKEN.</p>
+            </div>
+
             {/* Max Resale Price */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -246,10 +286,10 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || uploading}
                 className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isLoading ? 'Creating...' : 'Create Event'}
+                {isLoading ? 'Creating...' : uploading ? 'Uploading...' : 'Create Event'}
               </button>
             </div>
           </form>

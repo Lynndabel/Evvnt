@@ -50,9 +50,14 @@ export default function Home() {
   const reloadEvents = async () => {
     const total = await getTotalOccassions();
     const loaded: Event[] = [];
+    const imgMapRaw = typeof window !== 'undefined' ? localStorage.getItem('event_images') : null;
+    const imgMap: Record<string, string> = imgMapRaw ? JSON.parse(imgMapRaw) : {};
     for (let i = 1; i <= total; i++) {
       const ev = await getEventDetails(i);
-      if (ev) loaded.push(ev);
+      if (ev) {
+        const withImg = imgMap[String(ev.id)] ? { ...ev, imageUrl: imgMap[String(ev.id)] } : ev;
+        loaded.push(withImg);
+      }
     }
     setEvents(loaded);
   };
@@ -128,7 +133,17 @@ export default function Home() {
         const total = await getTotalOccassions();
         const onchain = await getEventDetails(total);
         if (onchain) {
-          setEvents(prev => [...prev, onchain]);
+          // Persist image mapping if provided
+          if ((eventData as any).imageUrl) {
+            try {
+              const imgMapRaw = localStorage.getItem('event_images');
+              const imgMap = imgMapRaw ? JSON.parse(imgMapRaw) : {};
+              imgMap[String(total)] = (eventData as any).imageUrl;
+              localStorage.setItem('event_images', JSON.stringify(imgMap));
+            } catch {}
+          }
+          const withImg = (eventData as any).imageUrl ? { ...onchain, imageUrl: (eventData as any).imageUrl } : onchain;
+          setEvents(prev => [...prev, withImg]);
         } else {
           // Fallback if read fails: add a best-effort placeholder with correct ID
           const fallback: Event = {
@@ -141,7 +156,8 @@ export default function Home() {
             time: eventData.time,
             location: eventData.location,
             maxResalePrice: BigInt(0),
-            organizer: userAddress || ''
+            organizer: userAddress || '',
+            imageUrl: (eventData as any).imageUrl || undefined
           };
           setEvents(prev => [...prev, fallback]);
         }

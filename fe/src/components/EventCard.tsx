@@ -17,6 +17,17 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      {/* Flyer Image */}
+      {event.imageUrl && (
+        <div className="w-full aspect-[16/9] bg-gray-100 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={event.imageUrl}
+            alt={`${event.title} flyer`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
         

@@ -9,6 +9,7 @@ export interface Event {
   location: string;
   maxResalePrice: bigint;
   organizer: string;
+  imageUrl?: string;
 }
 
 export interface TicketInfo {
