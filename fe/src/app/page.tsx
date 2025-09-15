@@ -9,6 +9,7 @@ import OrganizerDashboard from '@/components/OrganizerDashboard';
 import CreateEventModal from '@/components/CreateEventModal';
 import { Event } from '@/types/contract';
 import { useBlockchainIntegration } from '@/hooks/useBlockchainIntegration';
+import { addToast } from '@/lib/toast';
 
 interface CreateEventData {
   title: string;
@@ -102,13 +103,13 @@ export default function Home() {
         // Slight delay then full reload to ensure consistency across views
         setTimeout(() => { reloadEvents(); }, 1500);
         setSelectedEvent(null);
-        alert(`Ticket purchased successfully!${tokenPart}`);
+        addToast({ type: 'success', title: 'Registration complete', message: `Ticket purchased successfully!${tokenPart}` });
       } else {
         throw new Error('Transaction failed');
       }
     } catch (error) {
       console.error('Purchase failed:', error);
-      alert(`Registration failed: ${blockchainError || 'Please try again.'}`);
+      addToast({ type: 'error', title: 'Registration failed', message: `${blockchainError || 'Please try again.'}` });
     } finally {
       setIsLoading(false);
     }
@@ -144,6 +145,27 @@ export default function Home() {
           }
           const withImg = (eventData as any).imageUrl ? { ...onchain, imageUrl: (eventData as any).imageUrl } : onchain;
           setEvents(prev => [...prev, withImg]);
+
+          // Option 2: Pin event metadata (imageUrl) to IPFS and present share link with metaCid
+          if ((eventData as any).imageUrl) {
+            try {
+              const metaRes = await fetch('/api/ipfs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ data: { eventId: total, imageUrl: (eventData as any).imageUrl } })
+              });
+              if (metaRes.ok) {
+                const meta = await metaRes.json();
+                const metaCid = meta.cid as string;
+                const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                const shareUrl = `${origin}/event/${total}?metaCid=${metaCid}`;
+                addToast({ type: 'success', title: 'Share link ready', message: `Copied share link to clipboard.` });
+                try { await navigator.clipboard.writeText(shareUrl); } catch {}
+              }
+            } catch (e) {
+              console.warn('Pinning event metadata failed', e);
+            }
+          }
         } else {
           // Fallback if read fails: add a best-effort placeholder with correct ID
           const fallback: Event = {
@@ -164,13 +186,13 @@ export default function Home() {
         // Slight delay then full reload to ensure consistency
         setTimeout(() => { reloadEvents(); }, 1500);
         setShowCreateModal(false);
-        alert('Event created successfully! Transaction confirmed on blockchain.');
+        addToast({ type: 'success', title: 'Event created', message: 'Event created successfully.' });
       } else {
         throw new Error('Transaction failed');
       }
     } catch (error) {
       console.error('Error creating event:', error);
-      alert(`Failed to create event: ${blockchainError || 'Please try again.'}`);
+      addToast({ type: 'error', title: 'Create failed', message: `${blockchainError || 'Please try again.'}` });
     } finally {
       setIsLoading(false);
     }

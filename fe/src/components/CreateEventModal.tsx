@@ -3,6 +3,7 @@
 import React from 'react';
 import { useState } from 'react';
 import { uploadToIPFS } from '@/lib/ipfs';
+import { addToast } from '@/lib/toast';
 import LocationPicker from './LocationPicker';
 
 interface CreateEventModalProps {
@@ -38,6 +39,9 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({});
   const [uploading, setUploading] = useState(false);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const nowTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
   const validateForm = (): boolean => {
     const newErrors: Partial<EventFormData> = {};
@@ -55,6 +59,18 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
     if (maxResalePrice < 0) newErrors.maxResalePrice = 'Max resale price cannot be negative';
     if (price > 0 && maxResalePrice < price) {
       newErrors.maxResalePrice = 'Max resale price should be >= ticket price';
+    }
+
+    // Validate event is in the future
+    if (formData.date && formData.time) {
+      const eventDateTime = new Date(`${formData.date}T${formData.time}`);
+      const now = new Date();
+      if (isNaN(eventDateTime.getTime())) {
+        newErrors.date = newErrors.date || 'Invalid date/time';
+      } else if (eventDateTime.getTime() <= now.getTime()) {
+        newErrors.date = 'Event date/time must be in the future';
+        newErrors.time = 'Event date/time must be in the future';
+      }
     }
 
     setErrors(newErrors);
@@ -185,6 +201,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                   type="date"
                   value={formData.date}
                   onChange={(e) => handleInputChange('date', e.target.value)}
+                  min={todayStr}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
@@ -198,6 +215,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                   type="time"
                   value={formData.time}
                   onChange={(e) => handleInputChange('time', e.target.value)}
+                  min={formData.date === todayStr ? nowTimeStr : undefined}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
@@ -235,9 +253,9 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                     try {
                       const url = await uploadToIPFS(file);
                       setFormData(prev => ({ ...prev, imageUrl: url }));
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('Image upload failed', err);
-                      alert('Image upload failed. Please try again.');
+                      addToast({ type: 'error', title: 'Upload failed', message: err?.message || 'Image upload failed. Please try again.' });
                     } finally {
                       setUploading(false);
                     }

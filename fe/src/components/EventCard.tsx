@@ -1,6 +1,7 @@
 'use client';
 
 import { Event } from '@/types/contract';
+import Link from 'next/link';
 import { formatPrice } from '@/lib/contract';
 
 interface EventCardProps {
@@ -14,6 +15,11 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
   const availableTickets = event.tickets;
   const soldTickets = event.maxTickets - availableTickets;
   const isSoldOut = availableTickets <= 0;
+  const isExpired = (() => {
+    if (!event.date || !event.time) return false;
+    const dt = new Date(`${event.date}T${event.time}`);
+    return !isNaN(dt.getTime()) && dt.getTime() <= Date.now();
+  })();
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
@@ -29,7 +35,16 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
         </div>
       )}
       <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">
+          <Link href={`/event/${event.id}`} className="hover:underline">
+            {event.title}
+          </Link>
+        </h3>
+        {isExpired && (
+          <div className="mb-2 inline-flex items-center text-xs font-medium px-2 py-1 rounded bg-gray-200 text-gray-700">
+            Event Ended
+          </div>
+        )}
         
         <div className="space-y-2 text-sm text-gray-600 mb-4">
           <div className="flex items-center gap-2">
@@ -64,12 +79,14 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
 
         <button
           onClick={() => onRegister(event.id)}
-          disabled={!isConnected || isSoldOut}
+          disabled={!isConnected || isSoldOut || isExpired}
           className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
             !isConnected
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : isSoldOut
               ? 'bg-red-100 text-red-500 cursor-not-allowed'
+              : isExpired
+              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
               : 'bg-blue-600 text-white hover:bg-blue-700'
           }`}
         >
@@ -77,6 +94,8 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
             ? 'Connect Wallet to Register'
             : isSoldOut
             ? 'Sold Out'
+            : isExpired
+            ? 'Event Ended'
             : 'Register for Event'
           }
         </button>
