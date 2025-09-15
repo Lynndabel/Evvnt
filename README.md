@@ -16,17 +16,17 @@ A fully onâ€‘chain event ticketing platform where every ticket is a unique ERCâ€
 
 ---
 
-## Architecture
+## Architecture (Simple View)
 
 ```mermaid
 flowchart LR
   U[You] --> A[EventX Website]
-  A --> B[Somnia Network\n(create events, mint tickets)]
-  A --> C[IPFS\n(store event flyer & metadata)]
-  U -. share link or QR .-> Friends[Friends / Attendees]
-  Friends --> A
-  A --> D[/Verify Page/]
-  D --> B
+  A --> B[Somnia Network (create events, mint tickets)]
+  A --> C[IPFS (store flyer and metadata)]
+  U -. share link or QR .-> F[Friends and Attendees]
+  F --> A
+  A --> V[Verify Page]
+  V --> B
 ```
 
 In plain words:
