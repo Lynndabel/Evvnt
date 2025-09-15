@@ -2,9 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useBlockchainIntegration } from '@/hooks/useBlockchainIntegration';
 import { Event } from '@/types/contract';
+import WalletConnect from '@/components/WalletConnect';
+import { addToast } from '@/lib/toast';
 
 export default function VerifyPage() {
   const search = useSearchParams();
@@ -13,7 +16,7 @@ export default function VerifyPage() {
   const tokenId = useMemo(() => (tokenIdParam ? Number(tokenIdParam) : NaN), [tokenIdParam]);
   const eventId = useMemo(() => (eventIdParam ? Number(eventIdParam) : NaN), [eventIdParam]);
 
-  const { getTicketDetailsById, getOwnerOf, getEventDetails } = useBlockchainIntegration();
+  const { getTicketDetailsById, getOwnerOf, getEventDetails, isCheckedIn, checkIn, checkOrganizerStatus } = useBlockchainIntegration();
 
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<'unknown' | 'valid' | 'invalid'>('unknown');
@@ -21,6 +24,9 @@ export default function VerifyPage() {
   const [owner, setOwner] = useState<string>('');
   const [seatNumber, setSeatNumber] = useState<number | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
+  const [wallet, setWallet] = useState<string>('');
+  const [approvedOrganizer, setApprovedOrganizer] = useState<boolean>(false);
+  const [checked, setChecked] = useState<boolean>(false);
 
   useEffect(() => {
     const run = async () => {
@@ -48,10 +54,12 @@ export default function VerifyPage() {
 
         const currentOwner = await getOwnerOf(tokenId);
         const ev = await getEventDetails(eventId);
+        const chk = await isCheckedIn(tokenId);
 
         setOwner(currentOwner);
         setSeatNumber(details.seatNumber);
         setEvent(ev);
+        setChecked(chk);
         setStatus('valid');
         setMessage('This ticket is valid.');
       } catch (e) {
@@ -63,20 +71,46 @@ export default function VerifyPage() {
       }
     };
     run();
-  }, [tokenId, eventId, getTicketDetailsById, getOwnerOf, getEventDetails]);
+  }, [tokenId, eventId, getTicketDetailsById, getOwnerOf, getEventDetails, isCheckedIn]);
+
+  const handleConnect = async (address: string) => {
+    setWallet(address);
+    try {
+      const ok = await checkOrganizerStatus(address);
+      setApprovedOrganizer(ok);
+    } catch {
+      setApprovedOrganizer(false);
+    }
+  };
+
+  const doCheckIn = async () => {
+    if (!tokenId || Number.isNaN(tokenId)) return;
+    const ok = await checkIn(tokenId);
+    if (ok) {
+      addToast({ type: 'success', title: 'Checked In', message: `Token #${tokenId} checked in.` });
+      // refresh status
+      const chk = await isCheckedIn(tokenId);
+      setChecked(chk);
+    } else {
+      addToast({ type: 'error', title: 'Check-In failed', message: 'Unable to check in. Ensure you are an approved organizer.' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">Evvnt</Link>
+              <Link href="/" className="flex items-center">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <span className="ml-2 text-sm text-gray-500">Verify Ticket</span>
             </div>
             <nav className="flex items-center gap-6">
-              <Link href="/" className="text-gray-500 hover:text-blue-600">Events</Link>
-              <Link href="/my-tickets" className="text-gray-500 hover:text-blue-600">My Tickets</Link>
+              <Link href="/" className="text-gray-500 hover:link-brand">Events</Link>
+              <Link href="/my-tickets" className="text-gray-500 hover:link-brand">My Tickets</Link>
+              <WalletConnect onConnect={handleConnect} />
             </nav>
           </div>
         </div>
@@ -116,6 +150,27 @@ export default function VerifyPage() {
                     <div className="border rounded-lg p-4">
                       <p className="text-sm text-gray-500">Owner</p>
                       <p className="text-lg font-mono text-gray-900">{owner ? `${owner.slice(0,6)}...${owner.slice(-4)}` : '-'}</p>
+                    </div>
+                  </div>
+
+                  {/* Check-in status & action (organizers only) */}
+                  <div className="border rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Check-in Status</p>
+                      {checked ? (
+                        <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Checked In</span>
+                      ) : (
+                        <span className="inline-block mt-1 text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Not Checked In</span>
+                      )}
+                    </div>
+                    <div>
+                      <button
+                        onClick={doCheckIn}
+                        disabled={!approvedOrganizer || checked}
+                        className={`px-4 py-2 rounded ${(!approvedOrganizer || checked) ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'btn-brand'}`}
+                      >
+                        {checked ? 'Already Checked In' : (approvedOrganizer ? 'Check In' : 'Organizer Only')}
+                      </button>
                     </div>
                   </div>
                 </div>

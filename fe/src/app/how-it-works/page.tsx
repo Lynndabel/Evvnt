@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function HowItWorks() {
   return (
@@ -8,20 +9,22 @@ export default function HowItWorks() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">Evnnt</Link>
+              <Link href="/" className="flex items-center">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
             </div>
             
             <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-500 hover:text-blue-600">
+              <Link href="/" className="text-gray-500 hover:link-brand">
                 Events
               </Link>
-              <Link href="/about" className="text-gray-500 hover:text-blue-600">
+              <Link href="/about" className="text-gray-500 hover:link-brand">
                 About
               </Link>
-              <Link href="/how-it-works" className="text-gray-900 hover:text-blue-600 font-medium">
+              <Link href="/how-it-works" className="text-gray-900 hover:link-brand font-medium">
                 How It Works
               </Link>
             </nav>
@@ -30,10 +33,10 @@ export default function HowItWorks() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
+      <section className="brand-hero text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">How It Works</h1>
-          <p className="text-xl md:text-2xl text-blue-100">
+          <p className="text-xl md:text-2xl text-brand-200">
             Simple steps to secure, transparent event ticketing
           </p>
         </div>
@@ -50,7 +53,7 @@ export default function HowItWorks() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
             {/* Step 1 */}
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+              <div className="w-16 h-16 bg-brand text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
               <h3 className="text-xl font-semibold mb-2">Connect Wallet</h3>
@@ -105,8 +108,8 @@ export default function HowItWorks() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-gray-50 p-8 rounded-lg">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
@@ -175,7 +178,7 @@ export default function HowItWorks() {
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Core Functions</h3>
               
               <div className="space-y-6">
-                <div className="border-l-4 border-blue-500 pl-4">
+                <div className="border-l-4 pl-4" style={{ borderColor: 'var(--brand-500)' }}>
                   <h4 className="font-semibold text-lg mb-2">
                     <code className="bg-gray-100 px-2 py-1 rounded">mint(eventId, seatNumber)</code>
                   </h4>
@@ -217,9 +220,9 @@ export default function HowItWorks() {
               <h3 className="text-2xl font-bold text-gray-900 mb-6">Security Features</h3>
               
               <div className="space-y-6">
-                <div className="bg-blue-50 p-6 rounded-lg">
-                  <h4 className="font-semibold text-lg mb-2 text-blue-900">Access Control</h4>
-                  <p className="text-blue-700">
+                <div className="bg-brand-50 p-6 rounded-lg">
+                  <h4 className="font-semibold text-lg mb-2 text-brand-700">Access Control</h4>
+                  <p className="text-brand">
                     Only approved organizers can create events. Ticket owners have exclusive control over their NFTs.
                   </p>
                 </div>
@@ -264,7 +267,7 @@ export default function HowItWorks() {
               
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4 mt-1">
+                  <div className="w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center text-sm font-bold mr-4 mt-1">
                     1
                   </div>
                   <div>
@@ -346,22 +349,22 @@ export default function HowItWorks() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      <section className="brand-hero text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Experience the Future?</h2>
-          <p className="text-xl mb-8 text-blue-100">
+          <p className="text-xl mb-8 text-brand-200">
             Join thousands of users who trust Evvnt for secure, transparent event ticketing
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
               href="/"
-              className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              className="bg-white text-brand px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               Browse Events
             </Link>
             <Link 
               href="/about"
-              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-brand transition-colors"
             >
               Learn More
             </Link>
@@ -374,7 +377,9 @@ export default function HowItWorks() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h4 className="text-2xl font-bold mb-4">Evvnt</h4>
+              <Link href="/" className="inline-flex items-center mb-4">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <p className="text-gray-400 mb-4">
                 The future of event ticketing is here. Secure, transparent, and decentralized.
               </p>

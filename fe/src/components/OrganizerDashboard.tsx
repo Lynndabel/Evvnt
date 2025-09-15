@@ -20,9 +20,13 @@ export default function OrganizerDashboard({
   onCreateEvent 
 }: OrganizerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'analytics'>('overview');
-  const { getRegistrationsForEvent, cancelEvent: cancelEventOnChain, markEventOccurred: markOccurredOnChain, withdrawOrganizer: withdrawOnChain } = useBlockchainIntegration();
+  const { getRegistrationsForEvent, isCheckedIn, checkIn, cancelEvent: cancelEventOnChain, markEventOccurred: markOccurredOnChain, withdrawOrganizer: withdrawOnChain } = useBlockchainIntegration();
   const [openRegs, setOpenRegs] = useState<Record<number, boolean>>({});
-  const [regsData, setRegsData] = useState<Record<number, { loading: boolean; items: Array<{ tokenId: number; owner: string; seatNumber: number }> }>>({});
+  const [regsData, setRegsData] = useState<Record<number, { loading: boolean; items: Array<{ tokenId: number; owner: string; seatNumber: number; checked?: boolean }> }>>({});
+  const [regCounts, setRegCounts] = useState<Record<number, { checked: number; total: number }>>({});
+  const [regSearch, setRegSearch] = useState<Record<number, string>>({});
+  const [regPage, setRegPage] = useState<Record<number, number>>({});
+  const PAGE_SIZE = 50;
 
   const toggleRegistrations = async (eventId: number) => {
     setOpenRegs(prev => ({ ...prev, [eventId]: !prev[eventId] }));
@@ -31,7 +35,13 @@ export default function OrganizerDashboard({
     if (willOpen) {
       setRegsData(prev => ({ ...prev, [eventId]: { loading: true, items: prev[eventId]?.items || [] } }));
       const items = await getRegistrationsForEvent(eventId);
-      setRegsData(prev => ({ ...prev, [eventId]: { loading: false, items } }));
+      // Load check-in statuses in parallel
+      const statuses = await Promise.all(items.map(i => isCheckedIn(i.tokenId)));
+      const itemsWithStatus = items.map((i, idx) => ({ ...i, checked: Boolean(statuses[idx]) }));
+      const checkedCount = itemsWithStatus.filter(i => i.checked).length;
+      setRegsData(prev => ({ ...prev, [eventId]: { loading: false, items: itemsWithStatus } }));
+      setRegCounts(prev => ({ ...prev, [eventId]: { checked: checkedCount, total: itemsWithStatus.length } }));
+      setRegPage(prev => ({ ...prev, [eventId]: 1 }));
     }
   };
 
@@ -62,6 +72,25 @@ export default function OrganizerDashboard({
     const ok = await withdrawOnChain(ev.id);
     if (ok) addToast({ type: 'success', title: 'Withdrawn', message: `Proceeds withdrawn for ${ev.title}.` });
     else addToast({ type: 'error', title: 'Withdraw failed', message: 'Unable to withdraw proceeds.' });
+  };
+
+  const onRowCheckIn = async (eventId: number, tokenId: number) => {
+    const ok = await checkIn(tokenId);
+    if (ok) {
+      addToast({ type: 'success', title: 'Checked In', message: `Token #${tokenId} checked in.` });
+      // Update local state
+      setRegsData(prev => {
+        const curr = prev[eventId]?.items || [];
+        const updated = curr.map(it => it.tokenId === tokenId ? { ...it, checked: true } : it);
+        return { ...prev, [eventId]: { loading: false, items: updated } };
+      });
+      setRegCounts(prev => {
+        const c = prev[eventId] || { checked: 0, total: 0 };
+        return { ...prev, [eventId]: { checked: Math.min(c.checked + 1, c.total), total: c.total } };
+      });
+    } else {
+      addToast({ type: 'error', title: 'Check-In failed', message: 'Unable to check in this ticket.' });
+    }
   };
 
   if (!isApprovedOrganizer) {
@@ -101,7 +130,7 @@ export default function OrganizerDashboard({
           </div>
           <button
             onClick={onCreateEvent}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="btn-brand px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -124,7 +153,7 @@ export default function OrganizerDashboard({
               onClick={() => setActiveTab(tab.id as any)}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-[var(--brand-500)] text-brand'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -140,16 +169,16 @@ export default function OrganizerDashboard({
           <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-blue-50 p-6 rounded-lg">
+              <div className="bg-brand-50 p-6 rounded-lg">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-brand-50 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-blue-600">Total Events</p>
-                    <p className="text-2xl font-bold text-blue-900">{totalEvents}</p>
+                    <p className="text-sm font-medium text-brand">Total Events</p>
+                    <p className="text-2xl font-bold text-brand-700">{totalEvents}</p>
                   </div>
                 </div>
               </div>
@@ -158,7 +187,7 @@ export default function OrganizerDashboard({
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div className="ml-4">
@@ -226,7 +255,7 @@ export default function OrganizerDashboard({
               <h3 className="text-lg font-semibold text-gray-900">All My Events</h3>
               <button
                 onClick={onCreateEvent}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="btn-brand px-4 py-2 rounded-lg transition-colors text-sm"
               >
                 Create New Event
               </button>
@@ -237,7 +266,7 @@ export default function OrganizerDashboard({
                 <p className="text-lg mb-2">No events created yet</p>
                 <button
                   onClick={onCreateEvent}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn-brand px-6 py-2 rounded-lg transition-colors"
                 >
                   Create Your First Event
                 </button>
@@ -257,7 +286,7 @@ export default function OrganizerDashboard({
                         ) : event.eventTimestamp && nowSec > (event.eventTimestamp + GRACE_SECONDS) ? (
                           <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Refund Available</span>
                         ) : event.eventTimestamp && nowSec >= event.eventTimestamp ? (
-                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Ongoing</span>
+                          <span className="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded">Ongoing</span>
                         ) : (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Upcoming</span>
                         )}
@@ -266,7 +295,7 @@ export default function OrganizerDashboard({
                     <div className="space-y-2 text-sm text-gray-600 mb-4">
                       <p>{event.date} at {event.time}</p>
                       <p>{event.location}</p>
-                      <p className="font-medium text-blue-600">{formatPrice(event.price)} ETH</p>
+                      <p className="font-medium text-brand">{formatPrice(event.price)} ETH</p>
                       {/* Countdown */}
                       {event.eventTimestamp && !event.canceled && !event.occurred && (
                         <p className="text-xs text-gray-500">
@@ -291,7 +320,7 @@ export default function OrganizerDashboard({
                     
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full" 
+                        className="bg-brand h-2 rounded-full" 
                         style={{ width: `${((event.maxTickets - event.tickets) / event.maxTickets) * 100}%` }}
                       ></div>
                     </div>
@@ -322,7 +351,7 @@ export default function OrganizerDashboard({
                         className={`flex-1 text-sm py-2 px-3 rounded transition-colors ${
                           (event.canceled || event.occurred || !(event.eventTimestamp ? nowSec >= event.eventTimestamp : false))
                           ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          : 'btn-brand'
                         }`}
                       >
                         Mark Occurred
@@ -344,31 +373,141 @@ export default function OrganizerDashboard({
                     {openRegs[event.id] && (
                       <div className="mt-4 border-t pt-4">
                         <h5 className="text-sm font-semibold text-gray-900 mb-2">Registrations</h5>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-gray-500">Checked in {regCounts[event.id]?.checked || 0} / {regCounts[event.id]?.total || 0}</span>
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={regSearch[event.id] || ''}
+                              onChange={(e) => setRegSearch(prev => ({ ...prev, [event.id]: e.target.value }))}
+                              placeholder="Search by owner address"
+                              className="border rounded px-2 py-1 text-xs w-56"
+                            />
+                            <button
+                              className="text-xs px-3 py-1 rounded bg-brand text-white hover:bg-brand"
+                              onClick={async () => {
+                                const q = (regSearch[event.id] || '').trim().toLowerCase();
+                                const list = regsData[event.id]?.items || [];
+                                const matches = list.filter(r => r.owner.toLowerCase().includes(q));
+                                if (!q || matches.length === 0) {
+                                  addToast({ type: 'error', title: 'No match', message: 'No registrations match that address.' });
+                                  return;
+                                }
+                                const target = matches.find(m => !m.checked) || matches[0];
+                                if (target.checked) {
+                                  addToast({ type: 'info', title: 'Already checked in', message: `Token #${target.tokenId} is already checked in.` });
+                                  return;
+                                }
+                                await onRowCheckIn(event.id, target.tokenId);
+                              }}
+                            >
+                              Check In by Address
+                            </button>
+                          </div>
+                        </div>
                         {regsData[event.id]?.loading ? (
                           <p className="text-sm text-gray-500">Loading registrations...</p>
                         ) : regsData[event.id]?.items?.length ? (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            {/* Pagination controls (top) */}
+                            <div className="flex items-center justify-end gap-2 mb-2">
+                              {(() => {
+                                const all = regsData[event.id]?.items || [];
+                                const q = (regSearch[event.id] || '').trim().toLowerCase();
+                                const filtered = all.filter(r => !q || r.owner.toLowerCase().includes(q));
+                                const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                                const page = Math.min(regPage[event.id] || 1, totalPages);
+                                return (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <button
+                                      className="px-2 py-1 border rounded disabled:opacity-50"
+                                      onClick={() => setRegPage(prev => ({ ...prev, [event.id]: Math.max(1, page - 1) }))}
+                                      disabled={page <= 1}
+                                    >Prev</button>
+                                    <span>Page {page} / {totalPages}</span>
+                                    <button
+                                      className="px-2 py-1 border rounded disabled:opacity-50"
+                                      onClick={() => setRegPage(prev => ({ ...prev, [event.id]: Math.min(totalPages, page + 1) }))}
+                                      disabled={page >= totalPages}
+                                    >Next</button>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+
+                            <table className="min-w-full text-sm">
                               <thead>
-                                <tr className="text-left text-gray-600">
-                                  <th className="py-1 pr-2">Token</th>
-                                  <th className="py-1 pr-2">Seat</th>
-                                  <th className="py-1 pr-2">Owner</th>
+                                <tr className="text-left text-gray-500">
+                                  <th className="py-2 pr-4">Token ID</th>
+                                  <th className="py-2 pr-4">Owner</th>
+                                  <th className="py-2 pr-4">Seat</th>
+                                  <th className="py-2 pr-4">Status</th>
+                                  <th className="py-2 pr-4">Action</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {regsData[event.id].items.map((r) => (
+                                {(() => {
+                                  const all = regsData[event.id]?.items || [];
+                                  const q = (regSearch[event.id] || '').trim().toLowerCase();
+                                  const filtered = all.filter(r => !q || r.owner.toLowerCase().includes(q));
+                                  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                                  const page = Math.min(regPage[event.id] || 1, totalPages);
+                                  const start = (page - 1) * PAGE_SIZE;
+                                  const paged = filtered.slice(start, start + PAGE_SIZE);
+                                  return paged.map((r) => (
                                   <tr key={r.tokenId} className="border-t">
-                                    <td className="py-1 pr-2">#{r.tokenId}</td>
-                                    <td className="py-1 pr-2">{r.seatNumber}</td>
-                                    <td className="py-1 pr-2 font-mono">{r.owner.slice(0,6)}...{r.owner.slice(-4)}</td>
+                                    <td className="py-2 pr-4">#{r.tokenId}</td>
+                                    <td className="py-2 pr-4 font-mono">{r.owner.slice(0,6)}...{r.owner.slice(-4)}</td>
+                                    <td className="py-2 pr-4">{r.seatNumber + 1}</td>
+                                    <td className="py-2 pr-4">
+                                      {r.checked ? (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Checked In</span>
+                                      ) : (
+                                        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Not Checked In</span>
+                                      )}
+                                    </td>
+                                    <td className="py-2 pr-4">
+                                      <button
+                                        onClick={() => onRowCheckIn(event.id, r.tokenId)}
+                                        disabled={Boolean(r.checked)}
+                                        className={`text-xs px-3 py-1 rounded ${r.checked ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'btn-brand'}`}
+                                      >
+                                        {r.checked ? 'Done' : 'Check In'}
+                                      </button>
+                                    </td>
                                   </tr>
-                                ))}
+                                  ));
+                                })()}
                               </tbody>
                             </table>
+
+                            {/* Pagination controls (bottom) */}
+                            <div className="flex items-center justify-end gap-2 mt-2">
+                              {(() => {
+                                const all = regsData[event.id]?.items || [];
+                                const q = (regSearch[event.id] || '').trim().toLowerCase();
+                                const filtered = all.filter(r => !q || r.owner.toLowerCase().includes(q));
+                                const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                                const page = Math.min(regPage[event.id] || 1, totalPages);
+                                return (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <button
+                                      className="px-2 py-1 border rounded disabled:opacity-50"
+                                      onClick={() => setRegPage(prev => ({ ...prev, [event.id]: Math.max(1, page - 1) }))}
+                                      disabled={page <= 1}
+                                    >Prev</button>
+                                    <span>Page {page} / {totalPages}</span>
+                                    <button
+                                      className="px-2 py-1 border rounded disabled:opacity-50"
+                                      onClick={() => setRegPage(prev => ({ ...prev, [event.id]: Math.min(totalPages, page + 1) }))}
+                                      disabled={page >= totalPages}
+                                    >Next</button>
+                                  </div>
+                                );
+                              })()}
+                            </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-gray-500">No registrations yet.</p>
+                          <p className="text-sm text-gray-500">No registrations found.</p>
                         )}
                       </div>
                     )}

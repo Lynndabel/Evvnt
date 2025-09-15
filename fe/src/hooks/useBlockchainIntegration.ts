@@ -16,6 +16,8 @@ interface UseBlockchainIntegrationReturn {
   getOwnerOf: (tokenId: number) => Promise<string>;
   getTicketDetailsById: (tokenId: number) => Promise<{ occasionId: number; seatNumber: number; isForSale: boolean; resalePrice: bigint; originalOwner: string } | null>;
   getTokenURI: (tokenId: number) => Promise<string>;
+  isCheckedIn: (tokenId: number) => Promise<boolean>;
+  checkIn: (tokenId: number) => Promise<boolean>;
   isLoading: boolean;
   error: string | null;
   cancelEvent: (eventId: number) => Promise<boolean>;
@@ -103,6 +105,34 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
       return 0;
     }
   }, [getReadContract]);
+
+  const isCheckedIn = useCallback(async (tokenId: number): Promise<boolean> => {
+    try {
+      const contract = getReadContract();
+      const v: boolean = await contract.isCheckedIn(tokenId);
+      return Boolean(v);
+    } catch (err: any) {
+      console.error('Error reading isCheckedIn:', err);
+      return false;
+    }
+  }, [getReadContract]);
+
+  const checkIn = useCallback(async (tokenId: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const contract = await getContract();
+      const tx = await contract.checkIn(tokenId);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      console.error('Error calling checkIn:', err);
+      setError(err.message || 'Failed to check in');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getContract]);
 
   const getTokenURI = useCallback(async (tokenId: number): Promise<string> => {
     try {
@@ -309,13 +339,14 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
 
   const checkOrganizerStatus = useCallback(async (address: string): Promise<boolean> => {
     try {
-      const contract = await getContract();
-      return await contract.approvedOrganizers(address);
+      const contract = getReadContract();
+      const ok: boolean = await contract.isApprovedOrganizer(address);
+      return Boolean(ok);
     } catch (err: any) {
       console.error('Error checking organizer status:', err);
       return false;
     }
-  }, [getContract]);
+  }, [getReadContract]);
 
   const getEventDetails = useCallback(async (eventId: number): Promise<Event | null> => {
     try {
@@ -352,6 +383,8 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     getOwnerOf,
     getTicketDetailsById,
     getTokenURI,
+    isCheckedIn,
+    checkIn,
     cancelEvent,
     markEventOccurred,
     withdrawOrganizer,

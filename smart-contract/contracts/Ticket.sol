@@ -31,6 +31,30 @@ contract Ticket is ERC721 {
         bool payoutReleased; // escrow released to organizer
     }
 
+    /**
+     * @notice Mark a ticket as checked-in on-chain
+     * @param tokenId The ticket token ID being checked in
+     * @dev Only approved organizers (or owner) can perform check-in
+     */
+    function checkIn(uint256 tokenId) external onlyApprovedOrganizer {
+        _requireOwned(tokenId);
+        require(!checkedIn[tokenId], "Already checked in");
+        TicketInfo storage ticket = ticketDetails[tokenId];
+        Occassion storage occasion = occasions[ticket.occasionId];
+        require(!occasion.canceled, "Event canceled");
+        // Optional timing rule: allow check-in from 24h before start to any time after
+        // if (occasion.eventTimestamp > 0) {
+        //     require(block.timestamp + 24 hours >= occasion.eventTimestamp, "Too early to check in");
+        // }
+        checkedIn[tokenId] = true;
+        emit TicketCheckedIn(tokenId, ownerOf(tokenId), ticket.occasionId, block.timestamp);
+    }
+
+    /// @notice Query whether a ticket has been checked in
+    function isCheckedIn(uint256 tokenId) external view returns (bool) {
+        return checkedIn[tokenId];
+    }
+
     struct TicketInfo {
         uint256 occasionId;
         uint256 seatNumber;
@@ -46,6 +70,7 @@ contract Ticket is ERC721 {
     mapping(uint256 => TicketInfo) public ticketDetails;
     mapping(address => bool) public approvedOrganizers; // Track approved organizers
     mapping(address => uint256[]) public organizerEvents; // Track events by organizer
+    mapping(uint256 => bool) public checkedIn; // tokenId => checked-in status
 
     event TicketListedForSale(uint256 tokenId, uint256 price);
     event TicketSold(uint256 tokenId, address from, address to, uint256 price);
@@ -57,6 +82,7 @@ contract Ticket is ERC721 {
     event AttendeeRefund(uint256 tokenId, address to, uint256 amount);
     event OrganizerApproved(address organizer);
     event OrganizerRevoked(address organizer);
+    event TicketCheckedIn(uint256 indexed tokenId, address indexed attendee, uint256 indexed eventId, uint256 timestamp);
     
         /**
  * @notice Restricts function access to only the contract owner

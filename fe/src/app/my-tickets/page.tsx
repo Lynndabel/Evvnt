@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import WalletConnect from "@/components/WalletConnect";
 import { useBlockchainIntegration } from "@/hooks/useBlockchainIntegration";
 import { addToast } from "@/lib/toast";
@@ -208,13 +209,15 @@ export default function MyTicketsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">Evvnt</Link>
+              <Link href="/" className="flex items-center">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <span className="ml-2 text-sm text-gray-500">My Tickets</span>
             </div>
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-gray-500 hover:text-blue-600">Events</Link>
+              <Link href="/" className="text-gray-600 hover:link-brand">Events</Link>
               <WalletConnect onConnect={handleConnect} />
             </div>
           </div>
@@ -224,8 +227,8 @@ export default function MyTicketsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {!isConnected ? (
           <div className="bg-white rounded-xl shadow p-8 text-center">
-            <h2 className="text-xl font-semibold mb-2">Connect your wallet</h2>
-            <p className="text-gray-600">Connect to view the tickets you own.</p>
+            <h2 className="text-xl font-semibold mb-2 text-gray-900">Connect your wallet</h2>
+            <p className="text-gray-700">Connect to view the tickets you own.</p>
             <div className="mt-6 inline-block">
               <WalletConnect onConnect={handleConnect} />
             </div>
@@ -234,23 +237,23 @@ export default function MyTicketsPage() {
           <div className="bg-white rounded-xl shadow p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-semibold">Your Tickets</h2>
-                <p className="text-sm text-gray-500 font-mono">{walletAddress.slice(0,6)}...{walletAddress.slice(-4)}</p>
+                <h2 className="text-xl font-semibold text-gray-900">Your Tickets</h2>
+                <p className="text-sm text-gray-700 font-mono">{walletAddress.slice(0,6)}...{walletAddress.slice(-4)}</p>
               </div>
               <button
                 onClick={() => loadTickets(walletAddress)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 btn-brand rounded-lg"
               >
                 {loading ? "Refreshing..." : "Refresh"}
               </button>
             </div>
 
             {loading ? (
-              <p className="text-gray-500">Loading your tickets...</p>
+              <p className="text-gray-700">Loading your tickets...</p>
             ) : tickets.length === 0 ? (
-              <div className="text-center text-gray-600 py-10">
+              <div className="text-center text-gray-700 py-10">
                 <p>No tickets found for this wallet.</p>
-                <p className="text-sm mt-2">Purchase a ticket from the Events page and check back here.</p>
+                <p className="text-sm mt-2 text-gray-700">Purchase a ticket from the Events page and check back here.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -270,17 +273,17 @@ export default function MyTicketsPage() {
                             <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
                           )
                         )}
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Seat {t.seatNumber + 1}</span>
+                        <span className="text-xs bg-brand-50 text-brand-700 px-2 py-1 rounded">Seat {t.seatNumber + 1}</span>
                       </div>
                     </div>
                     {t.event ? (
                       <>
                         <p className="text-gray-800 font-medium">{t.event.title}</p>
-                        <p className="text-sm text-gray-600">{t.event.date} at {t.event.time}</p>
-                        <p className="text-sm text-gray-600">{t.event.location}</p>
+                        <p className="text-sm text-gray-700">{t.event.date} at {t.event.time}</p>
+                        <p className="text-sm text-gray-700">{t.event.location}</p>
                       </>
                     ) : (
-                      <p className="text-sm text-gray-500">Loading event details...</p>
+                      <p className="text-sm text-gray-700">Loading event details...</p>
                     )}
                     <div className="mt-4 text-sm text-gray-500">
                       <p>Event ID: {t.occasionId}</p>
@@ -313,7 +316,7 @@ export default function MyTicketsPage() {
                     {/* View NFT */}
                     <div className="mt-3">
                       <button
-                        className="w-full text-sm bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                        className="w-full text-sm btn-brand py-2 rounded"
                         onClick={() => openNFTImage(t.tokenId)}
                       >
                         View NFT

@@ -65,7 +65,7 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
 
         <div className="flex justify-between items-center mb-4">
           <div>
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-2xl font-bold text-brand">
               {formatPrice(event.price)} ETH
             </span>
           </div>
@@ -87,7 +87,7 @@ export default function EventCard({ event, onRegister, isConnected }: EventCardP
               ? 'bg-red-100 text-red-500 cursor-not-allowed'
               : isExpired
               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'btn-brand'
           }`}
         >
           {!isConnected

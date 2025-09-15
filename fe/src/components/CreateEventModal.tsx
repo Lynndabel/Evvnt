@@ -110,14 +110,14 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Event Title *
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                 placeholder="Enter event title"
               />
               {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
@@ -125,7 +125,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
 
             {/* Event Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Event Type *
               </label>
               <div className="flex space-x-4">
@@ -138,7 +138,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                     onChange={(e) => handleInputChange('eventType', e.target.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm">Free Event</span>
+                  <span className="text-sm text-gray-900">Free Event</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -149,7 +149,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                     onChange={(e) => handleInputChange('eventType', e.target.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm">Paid Event</span>
+                  <span className="text-sm text-gray-900">Paid Event</span>
                 </label>
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {formData.eventType === 'paid' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Ticket Price (ETH) *
                   </label>
                   <input
@@ -167,7 +167,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                     min="0.001"
                     value={formData.price}
                     onChange={(e) => handleInputChange('price', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                     placeholder="0.05"
                     required
                   />
@@ -176,7 +176,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Max Tickets *
                 </label>
                 <input
@@ -184,7 +184,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                   min="1"
                   value={formData.maxTickets}
                   onChange={(e) => handleInputChange('maxTickets', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                   placeholder="100"
                 />
                 {errors.maxTickets && <p className="text-red-500 text-sm mt-1">{errors.maxTickets}</p>}
@@ -194,7 +194,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
             {/* Date and Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Date *
                 </label>
                 <input
@@ -202,13 +202,13 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                   value={formData.date}
                   onChange={(e) => handleInputChange('date', e.target.value)}
                   min={todayStr}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                 />
                 {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-900 mb-2">
                   Time *
                 </label>
                 <input
@@ -224,14 +224,14 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
 
             {/* Location */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Location *
               </label>
               <input
                 type="text"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                 placeholder="Enter event location"
               />
               {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
@@ -239,7 +239,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
 
             {/* Event Flyer (Image Upload) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Event Flyer (Image)
               </label>
               <div className="flex items-center gap-4">
@@ -275,7 +275,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
 
             {/* Max Resale Price */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Max Resale Price (ETH)
               </label>
               <input
@@ -284,7 +284,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                 min="0"
                 value={formData.maxResalePrice}
                 onChange={(e) => handleInputChange('maxResalePrice', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-[var(--brand-500)] focus:border-transparent"
                 placeholder="0.075"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -305,7 +305,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
               <button
                 type="submit"
                 disabled={isLoading || uploading}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex-1 py-2 px-4 btn-brand rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? 'Creating...' : uploading ? 'Uploading...' : 'Create Event'}
               </button>

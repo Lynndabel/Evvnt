@@ -2,11 +2,11 @@
   "network": "somnia-testnet",
   "chainId": 50312,
   "deployer": "0x3bfbe4e3dcc472e9b1bdfc0c177de3459cf769bf",
-  "deploymentTime": "2025-09-15T14:34:40.120Z",
-  "transactionHash": "0xa9b0fce233e7da2ec52ef1aeb40bda72ebb734a06b5ee466be638ff8e58cf95f",
+  "deploymentTime": "2025-09-15T15:28:35.369Z",
+  "transactionHash": "0x7ab0494ad9444fc32fd8eac379fdcc978bccaba63c9b2e802810769faf08b699",
   "contracts": {
     "Ticket": {
-      "address": "0x601379ceeccad446941b2c4e43b74e22ecbdde53",
+      "address": "0xc8966abd81cab4d2f683449912ca72ac0057ad48",
       "constructorArgs": [
         "Evvnt Tickets",
         "EVTX"

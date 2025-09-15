@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import WalletConnect from '@/components/WalletConnect';
 import EventCard from '@/components/EventCard';
 import SeatSelection from '@/components/SeatSelection';
@@ -207,16 +208,18 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">Evvnt</h1>
+              <Link href="/" className="flex items-center">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
             </div>
             
             <nav className="hidden md:flex space-x-8">
               <button
                 onClick={() => setActiveView('events')}
-                className={`hover:text-blue-600 font-medium ${
+                className={`hover:link-brand font-medium ${
                   activeView === 'events' ? 'text-gray-900' : 'text-gray-500'
                 }`}
               >
@@ -225,20 +228,20 @@ export default function Home() {
               {isConnected && isApprovedOrganizer && (
                 <button
                   onClick={() => setActiveView('organizer')}
-                  className={`hover:text-blue-600 font-medium ${
+                  className={`hover:link-brand font-medium ${
                     activeView === 'organizer' ? 'text-gray-900' : 'text-gray-500'
                   }`}
                 >
                   Organizer Dashboard
                 </button>
               )}
-              <Link href="/my-tickets" className="text-gray-500 hover:text-blue-600">
+              <Link href="/my-tickets" className="text-gray-500 hover:link-brand">
                 My Tickets
               </Link>
-              <Link href="/about" className="text-gray-500 hover:text-blue-600">
+              <Link href="/about" className="text-gray-500 hover:link-brand">
                 About
               </Link>
-              <Link href="/how-it-works" className="text-gray-500 hover:text-blue-600">
+              <Link href="/how-it-works" className="text-gray-500 hover:link-brand">
                 How It Works
               </Link>
             </nav>
@@ -252,7 +255,7 @@ export default function Home() {
       {activeView === 'events' ? (
         <>
           {/* Hero Section */}
-          <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
+          <section className="brand-hero text-white py-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <h2 className="text-4xl md:text-6xl font-bold mb-6">
                 Secure Event Ticketing
@@ -378,7 +381,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h4 className="text-2xl font-bold mb-4">Evvnt</h4>
+              <Link href="/" className="inline-flex items-center mb-4">
+                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
+              </Link>
               <p className="text-gray-400 mb-4">
                 The future of event ticketing is here. Secure, transparent, and decentralized.
               </p>
