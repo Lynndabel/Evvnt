@@ -1,195 +1,231 @@
-# 🎟️ EventX – On‑chain NFT Ticketing on Somnia
+# EventX – Fully On‑Chain NFT Ticketing on Somnia
 
-## 🌍 Overview
+A fully on‑chain event ticketing platform where every ticket is a unique ERC‑721 NFT. Organizers create events. Attendees register and mint tickets. Ownership is transparent and transferable. QR verification makes entry instant and tamper‑proof.
 
-EventX is a fully on‑chain event ticketing platform that issues tickets as NFTs on the Somnia Testnet. It enables secure, transparent, and easily transferable ticket ownership, eliminating fraud and scalping. Organizers can create events; attendees can register, mint ticket NFTs, and verify them via QR.
+- Network: Somnia Testnet (Gelato RPC)
+- Ticket Standard: ERC‑721 (1 token = 1 seat)
+- Frontend: Next.js (App Router), TypeScript, Tailwind
+- Storage: IPFS (Web3.Storage if available, Pinata fallback via secure server route)
+- Verification: On‑chain `ownerOf` + `getTicketDetails`
 
-## ✨ Key Features
+## Why EventX?
+- Secure by design: tickets are NFTs on chain — no forgery, no duplicate entries.
+- Transparent: provenance and transfers are publicly verifiable.
+- Transferable: buyers can resell and transfer tickets under organizer rules.
+- Usable: clean UX with seat selection, QR verification, and toasts.
 
-### 🎟️ Decentralized Ticket Minting & Transfer
-- ERC‑721 tickets per seat with on‑chain ownership and transfers.
-- Live parsing of the ERC‑721 `Transfer` event to display minted Token ID after purchase.
+---
 
-### 🤖 AI Assistant (in‑app helper)
-- Context‑aware guidance for connect wallet, event creation, purchasing, and verification.
-- Floating UI available across pages.
+## Architecture
 
-### 📲 QR Code Verification
-- Each ticket exposes a verification link and QR.
-- `/verify?tokenId=...&eventId=...` checks `ownerOf(tokenId)` and `getTicketDetails(tokenId)` on‑chain.
+Note: GitHub renders Mermaid diagrams. If you don’t see the diagrams below, view this README directly on GitHub or switch to the “Preview” tab.
 
-### 🔐 Secure Blockchain Transactions
-- Powered by Somnia Testnet, enabling fast, transparent, and low‑cost mints and transfers.
-- Immutable on‑chain provenance and Transfer logs.
-
-### 🖼️ Event Flyers via IPFS/Pinata
-- Organizers upload an event image when creating an event.
-- If Web3.Storage is available, uploads go to Web3.Storage; otherwise a secure Next.js API route uploads to Pinata (server‑side JWT).
-- Flyers are displayed on event cards, the event details page, and shared via a decentralized metadata JSON pinned to IPFS.
-
-### 🧭 Shareable Event Page with QR
-- `/event/[id]?metaCid=<cid>` displays the flyer (loaded from IPFS JSON) and event info from chain.
-- Page includes a shareable link and a QR image for easy distribution.
-
-### ✅ UX Polishing
-- Past dates/times are disallowed when creating events; expired events are clearly marked and cannot be registered.
-- Toast notifications for success and error states (create event, purchase, uploads).
-
-### 🔄 Resale Marketplace
-A decentralized marketplace for verified ticket resale, maintaining ticket integrity and fair pricing. Automated smart contracts prevent scalping and fraud while ensuring legitimate secondary market transactions.
-
-## 🛠️ Tech Stack
-
-### Languages & Frameworks
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Solidity](https://img.shields.io/badge/Solidity-363636?style=for-the-badge&logo=solidity&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-
-### Blockchain
-Somnia Testnet (Gelato RPC)
-
-Contracts: Solidity (ERC‑721 Ticket), optional ERC‑1155 collectibles (roadmap)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Ensure you have Node.js and npm installed on your system:
-
-```bash
-node --version
-npm --version
+```mermaid
+flowchart TD
+  A[User Browser (Next.js)] -->|JSON-RPC| B[Somnia Testnet]
+  A -->|Upload| C{IPFS Upload}
+  C -->|Primary| C1[Web3.Storage]
+  C -->|Fallback| C2[Pinata via /api/ipfs (server)]
+  A -->|API| D[/api/ipfs (server route)/]
+  A -->|Show QR| E[QR Image Service]
+  B -->|ERC‑721| F[Ticket Contract]
+  A -->|Read/Write| F
 ```
 
-### Installation (Frontend)
+### User Flow (High Level)
 
-1) Clone and open the repo
+```mermaid
+sequenceDiagram
+  autonumber
+  participant U as User (Organizer/Attendee)
+  participant FE as Next.js Frontend
+  participant CH as Somnia Chain
+  participant IP as IPFS (Web3.Storage/Pinata)
+
+  U->>FE: Create Event (title/date/time/location...)
+  FE->>IP: Upload Flyer (image)
+  IP-->>FE: imageUrl (ipfs:// or gateway URL)
+  FE->>CH: list() with event details (payable fee)
+  CH-->>FE: tx receipt (eventId)
+  FE->>IP: Pin JSON {eventId, imageUrl}
+  IP-->>FE: metaCid
+  FE-->>U: Share link /event/{id}?metaCid=<cid> (QR)
+
+  U->>FE: Register (select seat)
+  FE->>CH: mintTicket(eventId, seat, price)
+  CH-->>FE: Transfer (tokenId)
+  FE-->>U: Toast: Ticket minted (Token #)
+
+  U->>FE: Verify (/verify?tokenId&eventId)
+  FE->>CH: ownerOf(tokenId), getTicketDetails(tokenId)
+  CH-->>FE: owner, seat, occasionId
+  FE-->>U: Valid/Invalid (details)
+```
+
+- Reads go directly to Somnia (public RPC).
+- Writes (mint, create) go on chain via wallet.
+- Images are stored on IPFS; if Web3.Storage is down or not configured, we securely fallback to Pinata via a server-only secret.
+- The Event Details page supports shareable links (with `metaCid`) and QR codes.
+
+---
+
+## Contract Addresses
+
+- Ticket (ERC‑721): `0x9c8447b583dc5ff7a25289ca1f7dd6637ff81955` (Somnia Testnet)
+  - Chain ID: 50312
+  - RPC: https://dream-rpc.somnia.network
+
+---
+
+## Features
+
+- Ticket NFTs
+  - ERC‑721 per seat, immutable Transfer logs
+  - Token ID revealed after purchase
+- Seat selection and availability
+  - Live availability from chain; UI updates on mint
+- QR verification
+  - My Tickets shows QR + verification link
+  - `/verify?tokenId=...&eventId=...` checks on chain
+- Event flyers (IPFS/Pinata)
+  - Upload flyer in the Create Event modal
+  - If Web3.Storage 503s, auto-fallback to Pinata (server route)
+  - Flyer shared via pinned JSON metadata (`metaCid`)
+- Shareable event page
+  - `/event/[id]?metaCid=<cid>` shows flyer + details and provides a QR for sharing
+- Organizer dashboard
+  - Your events, tickets sold, and “View Registrations” (owner, seat, tokenId)
+- Clean UX
+  - Past dates/times blocked; expired events display “Event Ended” and are unregistrable
+  - Toast notifications on success/error
+
+---
+
+## Quick Start
+
+1) Clone and run the frontend
 ```bash
 git clone https://github.com/Lynndabel/Evvnt.git
 cd EventX/fe
-```
-
-2) Install and run
-```bash
 npm install
 npm run dev
+# Open http://localhost:3000
 ```
 
-3) Open the app
-```
-http://localhost:3000
-```
+2) Configure environment in `fe/.env.local`
+```env
+# Chain
+NEXT_PUBLIC_CONTRACT_ADDRESS=0x9f2b8a544a647e66dea8ad4a202e84bef0819e17
+NEXT_PUBLIC_CHAIN_ID=50312
+NEXT_PUBLIC_RPC_URL=https://dream-rpc.somnia.network
 
-### Installation (Contracts)
-Contracts are in `smart-contract/`. Deploy to Somnia Testnet, then set the address in the frontend env.
+# Optional: Web3.Storage (if you have it, uploads try this first)
+NEXT_PUBLIC_WEB3_STORAGE_TOKEN=YOUR_WEB3_STORAGE_TOKEN
 
-## ⚙️ Configuration
-
-Create `fe/.env.local` with:
-```
-NEXT_PUBLIC_CONTRACT_ADDRESS=0x9c8447b583dc5ff7a25289ca1f7dd6637ff81955
-NEXT_PUBLIC_RPC_URL=https://rpc-somnia-testnet.gelato.digital
-
-# Optional: use Web3.Storage first, falls back to Pinata if not set or down
-NEXT_PUBLIC_WEB3_STORAGE_TOKEN=...
-
-# Required for Pinata uploads (server-side only)
-PINATA_JWT=eyJhbGciOi...
+# Required for Pinata (server-side, not public)
+PINATA_JWT=YOUR_PINATA_JWT_WITH_pinFileToIPFS_and_pinJSONToIPFS_scopes
 ```
 
-Notes:
-- If Web3.Storage is unavailable (maintenance), uploads automatically fall back to Pinata via `/api/ipfs`.
-- Pinata JWT must include scopes for `pinFileToIPFS` and `pinJSONToIPFS`.
+3) Contracts (optional to redeploy)
+- Contracts live in `smart-contract/`
+- Deploy to Somnia, then set `NEXT_PUBLIC_CONTRACT_ADDRESS`
 
-## 📈 Platform Features
+4) Deployed dApp (Somnia Testnet)
+- Live URL: https://<your-deployment-domain> (update this with your actual deployed link)
+- Network: Somnia Testnet (Chain ID 50312)
 
-### 🌐 Landing Page
-A modern, responsive landing page that showcases the platform's capabilities and allows users to join the waitlist for early access.
+5) Public Repository
+- GitHub: https://github.com/Lynndabel/Evvnt (public, actively updated with multiple commits)
 
-<img width="945" alt="Landing Page" src="https://github.com/user-attachments/assets/36aff1b1-6c2f-476d-b0ea-8729c0a52148" />
+---
 
-### 🎟️ Event Management
-- Create events with title, date/time, location, max tickets, and optional max resale price.
-- Upload a flyer image (IPFS). Past date/time is blocked.
+## How It Works
 
-<img width="948" alt="Event Management" src="https://github.com/user-attachments/assets/786b0fb1-92c5-4433-89bd-6c7282ea8e69" />
+- Create event (Organizer)
+  - Fill title, date/time (future only), price, max tickets, optional max resale price
+  - Upload a flyer image → stored on IPFS
+  - After success: we pin `{ eventId, imageUrl }` as JSON to IPFS and copy a share URL `/event/{id}?metaCid=<cid>` to your clipboard
+- Share event
+  - Send the share URL or the QR shown on the Event Details page
+- Register (Attendee)
+  - Choose seat, confirm transaction, mint ERC‑721 ticket
+  - Token ID is shown in a toast after the transaction
+- Verify at entry
+  - Staff scan a ticket QR from My Tickets or open `/verify?tokenId=...&eventId=...`
+  - The page reads on-chain and shows owner + seat, and whether the ticket is valid
 
-### 🏪 Ticket Purchasing
-- Browse events, see availability and pricing, register by selecting a seat.
-- On success, a ticket NFT is minted and the Token ID is shown.
+---
 
-<img width="950" alt="Ticket Collection" src="https://github.com/user-attachments/assets/cd58022e-d42d-4327-b3f6-ec45d496d4d8" />
+## Key Pages
 
-### 💳 Ticket Sales Interface
-Streamlined ticket purchasing experience with blockchain integration.
+- `/` Home: Events listing and Organizer Dashboard
+- `/my-tickets` Attendee tickets with QR and verification links
+- `/verify` Live on-chain verification of a given ticket
+- `/event/[id]` Flyer + details, share link, QR for distribution
 
-<img width="960" alt="Ticket Sales" src="https://github.com/user-attachments/assets/a222522c-71fc-47df-b6f0-a775ed58cd11" />
+---
 
-### 🔨 NFT Ticket Minting
-- ERC‑721 ticket per seat. Organizer availability updates on purchase.
+## IPFS and Uploads
 
-<img width="959" alt="Ticket Minting" src="https://github.com/user-attachments/assets/f773d40b-760f-4021-aaf0-0ea4d87e677e" />
+- Default path: Web3.Storage if `NEXT_PUBLIC_WEB3_STORAGE_TOKEN` is present
+- Automatic fallback: Pinata via secure server route `/api/ipfs` (requires `PINATA_JWT` in server env)
+- We pin small JSON metadata `{ eventId, imageUrl }` to allow everyone to see flyers cross-device
 
-### 📱 QR Verification
-- My Tickets page shows a QR per ticket and a copyable verification link.
-- `/verify` page checks validity on‑chain and displays seat and owner.
+If you hit:
+- Web3.Storage 503: We transparently fall back to Pinata
+- Pinata 403 NO_SCOPES_FOUND: Recreate your JWT with `pinFileToIPFS` and `pinJSONToIPFS` scopes
 
-### 👤 Organizer Dashboard
-- View events you created, including tickets sold and a live “View Registrations” table (owner, seat, tokenId).
+---
 
-### 🖼️ Event Details & Sharing
-- `/event/[id]` shows flyer, info, and includes a QR share code.
+## Anti-Fraud and Scalping
 
-<img width="947" alt="QR Code Integration" src="https://github.com/user-attachments/assets/99520049-8a10-4ae3-b538-2e6b0bc5df7b" />
+- Proof of ownership: `ownerOf(tokenId)` and Transfer logs
+- Single seat per token: unique ERC‑721 seat mapping
+- Roadmap: enforce resale via on-chain function honoring `maxResalePrice` and an official marketplace flow
 
-## 🔵 Somnia Integration
+---
 
-### Why Base?
+## Screenshots (Placeholders)
 
-**⚡ Speed & Efficiency**
-Fast confirmation on Somnia Testnet (via Gelato RPC).
+- Ticket Collection
+- Ticket Sales
+- Ticket Minting
+- QR Verification
 
-**💰 Cost Efficiency**
-Minimal transaction fees make the platform accessible to users while keeping operational costs low for event organizers.
+You can embed your existing GitHub-hosted images here.
 
-**🔒 Security**
-Built on Ethereum's robust security model with the added benefits of Layer 2 scaling solutions.
+---
 
-## 🌐 Share & Demo
+## Roadmap
 
-- Shareable Event Page: `/event/{id}?metaCid=<cid>`
-- Verification Page: `/verify?tokenId=...&eventId=...`
+- Event collectibles (ERC‑1155): per-event collectibles with ticket-holder gating
+- On-chain resale function and marketplace integration
+- Indexing with a dedicated `TicketPurchased` event for faster UI updates
+- Explorer links in toasts for quick transaction view
 
-## 🧪 How to Use
+---
 
-1) Connect wallet on the home page.
-2) Create an event (choose a future date/time). Optionally upload a flyer.
-3) Share the event link from the success toast. The link includes `metaCid` so others see the flyer.
-4) Attendees open the link or the app, pick a seat, and register.
-5) After purchase, they see the minted Token ID and can view it in My Tickets.
-6) At entry, scan the ticket’s QR to verify on `/verify`.
+## Troubleshooting
 
-## 🧰 Troubleshooting
+- Web3.Storage maintenance: uses Pinata automatically (ensure `PINATA_JWT` set)
+- Disk/site storage errors (FILE_ERROR_NO_SPACE): free disk or clear site data in DevTools → Application → Clear storage
+- Flyer not visible to others: share the `/event/[id]?metaCid=<cid>` link once; it caches the flyer mapping locally
 
-- Web3.Storage 503 maintenance: uploads automatically fall back to Pinata (ensure `PINATA_JWT` is set with proper scopes).
-- Pinata 403 NO_SCOPES_FOUND: recreate JWT with `pinFileToIPFS` and `pinJSONToIPFS` scopes.
-- Browser storage errors (FILE_ERROR_NO_SPACE): free local disk space or clear site data (DevTools → Application → Clear storage).
+---
 
-## 🗺️ Roadmap
+## License
 
-- ERC‑1155 Event Collectibles (one tokenId per event, optional ticket‑holder gating).
-- On‑chain resale function with enforced `maxResalePrice` and marketplace integration.
-- Live event indexing via a custom `TicketPurchased` event for faster reads.
-- Attendee-facing toast links to Somnia explorer and improved activity history.
+MIT — see `LICENSE`
 
-## 📄 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Contributing
 
-## 🤝 Contributing
+PRs are welcome. Please open an issue to discuss large changes and provide steps to reproduce any bugs.
 
-We welcome contributions from the community! Please read our contributing guidelines and submit pull requests for any improvements.
+---
 
-## 📞 Support
+## Contact
 
-For support or questions, please reach out to our team or create an issue in this repository.
+Open an issue with a clear description and logs if you run into problems, or share feedback to improve the product.
+
