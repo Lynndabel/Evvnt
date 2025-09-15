@@ -209,7 +209,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">EventX</h1>
+              <h1 className="text-2xl font-bold text-blue-600">Evvnt</h1>
               <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
             </div>
             
@@ -317,7 +317,7 @@ export default function Home() {
       <section className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">Why Choose EventX?</h3>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">Why Choose Evvnt?</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -378,7 +378,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h4 className="text-2xl font-bold mb-4">EventX</h4>
+              <h4 className="text-2xl font-bold mb-4">Evvnt</h4>
               <p className="text-gray-400 mb-4">
                 The future of event ticketing is here. Secure, transparent, and decentralized.
               </p>
@@ -402,7 +402,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 EventX. All rights reserved.</p>
+            <p>&copy; 2024 Evvnt. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -5,7 +5,7 @@ import { Event, TicketInfo } from '@/types/contract';
 export const CONTRACT_CONFIG = {
   // Note: `useBlockchainIntegration` can read NEXT_PUBLIC_CONTRACT_ADDRESS at runtime.
   // This fallback is used by utilities/components that import CONTRACT_CONFIG directly.
-  address: '0x9c8447b583dc5ff7a25289ca1f7dd6637ff81955',
+  address: '0x601379ceeccad446941b2c4e43b74e22ecbdde53',
   chainId: 50312, // Somnia Testnet
 };
 
@@ -25,6 +25,10 @@ export const formatEventFromContract = (eventData: any[]): Event => {
     location: eventData[7],
     maxResalePrice: eventData[8],
     organizer: eventData[9],
+    eventTimestamp: Number(eventData[10]),
+    canceled: Boolean(eventData[11]),
+    occurred: Boolean(eventData[12]),
+    escrowBalance: eventData[13] as bigint,
   };
 };
 

@@ -2,12 +2,16 @@
 pragma solidity ^0.8.28;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 
 contract Ticket is ERC721 {
     address public owner;
     uint256 public totalOccassions;
     uint256 public totalSupply;
     uint256 public constant ORGANIZER_FEE = 1000000000000; // 0.000001 ETH in wei
+    uint256 public constant FEE_BPS = 250; // 2.5% protocol fee for paid events
+    uint256 public constant GRACE_PERIOD = 48 hours; // organizer has 48h after event to mark occurred
 
     struct Occassion {
         uint256 id;
@@ -20,6 +24,11 @@ contract Ticket is ERC721 {
         string location;
         uint256 maxResalePrice;
         address organizer; // Track who created the event
+        uint256 eventTimestamp; // unix timestamp of event start
+        uint256 escrowBalance; // accumulated primary sale proceeds awaiting release
+        bool canceled; // organizer canceled
+        bool occurred; // organizer confirmed occurred
+        bool payoutReleased; // escrow released to organizer
     }
 
     struct TicketInfo {
@@ -42,6 +51,10 @@ contract Ticket is ERC721 {
     event TicketSold(uint256 tokenId, address from, address to, uint256 price);
     event TicketUnlisted(uint256 tokenId);
     event EventCreated(uint256 eventId, address organizer, string title);
+    event EventCanceled(uint256 eventId);
+    event EventOccurred(uint256 eventId);
+    event OrganizerWithdraw(uint256 eventId, uint256 amount);
+    event AttendeeRefund(uint256 tokenId, address to, uint256 amount);
     event OrganizerApproved(address organizer);
     event OrganizerRevoked(address organizer);
     
@@ -91,22 +104,28 @@ contract Ticket is ERC721 {
     string memory _date,
     string memory _time,
     string memory _location,
-    uint256 _maxResalePrice
+    uint256 _maxResalePrice,
+    uint256 _eventTimestamp
    ) public payable {
     require(msg.value >= ORGANIZER_FEE, "Insufficient fee to create event");
     totalOccassions++;
-    occasions[totalOccassions] = Occassion(
-        totalOccassions,
-        _title,
-        _price,
-        _maxTickets, // initial available tickets
-        _maxTickets,
-        _date,
-        _time,
-        _location,
-        _maxResalePrice,
-        msg.sender // Track who created the event
-    );
+    occasions[totalOccassions] = Occassion({
+        id: totalOccassions,
+        title: _title,
+        price: _price,
+        tickets: _maxTickets, // available tickets
+        maxTickets: _maxTickets,
+        date: _date,
+        time: _time,
+        location: _location,
+        maxResalePrice: _maxResalePrice,
+        organizer: msg.sender,
+        eventTimestamp: _eventTimestamp,
+        escrowBalance: 0,
+        canceled: false,
+        occurred: false,
+        payoutReleased: false
+    });
     
     // Track this event for the organizer
     organizerEvents[msg.sender].push(totalOccassions);
@@ -125,6 +144,7 @@ contract Ticket is ERC721 {
 
     // Require that ETH sent is greater than cost...
     require(msg.value >= occasions[_id].price, "Insufficient ETH sent for the occasion");
+    require(!occasions[_id].canceled, "Event canceled");
 
     // Require that the seat is not taken, and the seats exists...
     require(_seat < occasions[_id].maxTickets, "Seat number exceeds max tickets");
@@ -149,6 +169,17 @@ contract Ticket is ERC721 {
     });
 
     _safeMint(msg.sender, totalSupply);
+
+    // Protocol fee and escrow (2.5% on paid events; 0% on free events)
+    uint256 price = occasions[_id].price;
+    uint256 fee = price == 0 ? 0 : (msg.value * FEE_BPS) / 10000;
+    uint256 toEscrow = msg.value - fee;
+
+    if (fee > 0) {
+        (bool okFee, ) = owner.call{value: fee}("");
+        require(okFee, "Protocol fee transfer failed");
+    }
+    occasions[_id].escrowBalance += toEscrow;
  }
 
  function listTicketForSale(uint256 tokenId, uint256 price) public onlyTicketOwner(tokenId) {
@@ -280,21 +311,28 @@ function unlistTicket(uint256 tokenId) public onlyTicketOwner(tokenId) {
         string memory time,
         string memory location,
         uint256 maxResalePrice,
-        address organizer
+        address organizer,
+        uint256 eventTimestamp,
+        bool canceled,
+        bool occurred,
+        uint256 escrowBalance
     ) {
         require(_eventId > 0 && _eventId <= totalOccassions, "Invalid event ID");
-        Occassion storage occasion = occasions[_eventId];
         return (
-            occasion.id,
-            occasion.title,
-            occasion.price,
-            occasion.tickets,
-            occasion.maxTickets,
-            occasion.date,
-            occasion.time,
-            occasion.location,
-            occasion.maxResalePrice,
-            occasion.organizer
+            occasions[_eventId].id,
+            occasions[_eventId].title,
+            occasions[_eventId].price,
+            occasions[_eventId].tickets,
+            occasions[_eventId].maxTickets,
+            occasions[_eventId].date,
+            occasions[_eventId].time,
+            occasions[_eventId].location,
+            occasions[_eventId].maxResalePrice,
+            occasions[_eventId].organizer,
+            occasions[_eventId].eventTimestamp,
+            occasions[_eventId].canceled,
+            occasions[_eventId].occurred,
+            occasions[_eventId].escrowBalance
         );
     }
 
@@ -305,5 +343,108 @@ function unlistTicket(uint256 tokenId) public onlyTicketOwner(tokenId) {
      */
     function isApprovedOrganizer(address _organizer) public view returns (bool) {
         return approvedOrganizers[_organizer] || _organizer == owner;
+    }
+
+    // -----------------
+    // tokenURI with on-chain SVG image
+    // -----------------
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        TicketInfo storage t = ticketDetails[tokenId];
+        Occassion storage o = occasions[t.occasionId];
+
+        string memory name = string(abi.encodePacked("Evvnt Ticket #", Strings.toString(tokenId)));
+        string memory desc = string(abi.encodePacked(
+            "Event: ", o.title, " | Date: ", o.date, " ", o.time, " | Location: ", o.location,
+            " | Seat: ", Strings.toString(t.seatNumber + 1)
+        ));
+
+        // Generative palette selection (anime/neon vibes), deterministic by seed
+        bytes32 seed = keccak256(abi.encodePacked(tokenId, o.title, o.date, o.location));
+        uint256 s = uint256(seed);
+        uint8 idx = uint8(s % 6);
+        string memory c1; // primary
+        string memory c2; // secondary
+        string memory c3; // accent
+        string memory bg; // background gradient end
+        if (idx == 0) { c1 = "#ff2d95"; c2 = "#7b2cff"; c3 = "#00e5ff"; bg = "#0a0f1f"; }
+        else if (idx == 1) { c1 = "#ff8a00"; c2 = "#ff2d55"; c3 = "#00f0ff"; bg = "#0b1224"; }
+        else if (idx == 2) { c1 = "#00ffa3"; c2 = "#00d1ff"; c3 = "#ff3df0"; bg = "#0a1020"; }
+        else if (idx == 3) { c1 = "#ffd166"; c2 = "#8338ec"; c3 = "#3a86ff"; bg = "#0a0a1a"; }
+        else if (idx == 4) { c1 = "#ff6b6b"; c2 = "#f94cff"; c3 = "#5ef1ff"; bg = "#0c0f1e"; }
+        else { c1 = "#22d3ee"; c2 = "#a78bfa"; c3 = "#fb7185"; bg = "#0b1022"; }
+
+        // Derive ring parameters
+        uint256 r1 = 90 + (s % 40);            // 90-129
+        uint256 r2 = 60 + ((s >> 32) % 40);    // 60-99
+        uint256 r3 = 30 + ((s >> 64) % 24);    // 30-53
+        uint256 d1 = 300 + ((s >> 96) % 200);  // dasharray
+        uint256 d2 = 180 + ((s >> 128) % 160);
+        uint256 rot = (s >> 160) % 360;
+
+        // All ASCII-only SVG with mask, blur filter glows, radial gradients, and concentric arcs
+        string memory svg = string(abi.encodePacked(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">',
+            '<defs>',
+              '<radialGradient id="bg" cx="50%" cy="50%" r="70%">',
+                '<stop offset="0%" stop-color="', c2, '" stop-opacity="0.15"/>',
+                '<stop offset="100%" stop-color="', bg, '" stop-opacity="1"/>',
+              '</radialGradient>',
+              '<radialGradient id="ring" cx="50%" cy="50%" r="60%">',
+                '<stop offset="0%" stop-color="', c1, '"/>',
+                '<stop offset="100%" stop-color="', c2, '"/>',
+              '</radialGradient>',
+              '<filter id="glow" x="-50%" y="-50%" width="200%" height="200%">',
+                '<feGaussianBlur stdDeviation="6" result="b"/>',
+                '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>',
+              '</filter>',
+              '<mask id="circleMask">',
+                '<rect width="100%" height="100%" fill="white"/>',
+                '<circle cx="320" cy="320" r="250" fill="black"/>',
+              '</mask>',
+            '</defs>',
+            '<rect width="100%" height="100%" fill="url(#bg)"/>',
+            '<g transform="translate(320,320) rotate(', Strings.toString(rot), ')">',
+              // outer glow ring
+              '<circle r="', Strings.toString(r1 + 8), '" fill="none" stroke="', c3, '" stroke-opacity="0.35" stroke-width="18" filter="url(#glow)"/>',
+              // main ring with gradient
+              '<circle r="', Strings.toString(r1), '" fill="none" stroke="url(#ring)" stroke-width="10" stroke-dasharray="', Strings.toString(d1), ' 40"/>',
+              // mid ring
+              '<circle r="', Strings.toString(r2), '" fill="none" stroke="', c3, '" stroke-opacity="0.8" stroke-width="6" stroke-dasharray="', Strings.toString(d2), ' 24"/>',
+              // inner ring
+              '<circle r="', Strings.toString(r3), '" fill="none" stroke="', c1, '" stroke-opacity="0.9" stroke-width="4"/>',
+              // accent arcs
+              '<g stroke-linecap="round" stroke="', c2, '" stroke-opacity="0.9" stroke-width="5">',
+                '<path d="M 0 0"/>',
+              '</g>',
+            '</g>',
+            // ticket info card clipped within circle
+            '<g mask="url(#circleMask)">',
+              '<rect x="80" y="400" width="480" height="148" rx="16" fill="#0f172a" opacity="0.85"/>',
+              '<text x="104" y="440" font-family="Segoe UI,Roboto,Arial" font-size="22" font-weight="700" fill="#e2e8f0">', o.title, '</text>',
+              '<text x="104" y="468" font-family="Segoe UI,Roboto,Arial" font-size="14" fill="#94a3b8">Date: ', o.date, ' ', o.time, '</text>',
+              '<text x="104" y="490" font-family="Segoe UI,Roboto,Arial" font-size="14" fill="#94a3b8">Location: ', o.location, '</text>',
+              '<text x="104" y="520" font-family="Segoe UI,Roboto,Arial" font-size="16" font-weight="600" fill="', c1, '">Seat #', Strings.toString(t.seatNumber + 1), '</text>',
+            '</g>',
+            '<text x="320" y="616" text-anchor="middle" font-family="Segoe UI,Roboto,Arial" font-size="12" fill="#94a3b8">Evvnt - On-chain Generative Ticket - #', Strings.toString(tokenId), '</text>',
+            '</svg>'
+        ));
+
+        string memory image = string(abi.encodePacked("data:image/svg+xml;utf8,", svg));
+
+        bytes memory json = abi.encodePacked(
+            '{',
+                '"name":"', name, '",',
+                '"description":"', desc, '",',
+                '"image":"', image, '",',
+                '"attributes":[',
+                    '{"trait_type":"Event ID","value":"', Strings.toString(o.id), '"},',
+                    '{"trait_type":"Seat","value":"', Strings.toString(t.seatNumber + 1), '"}',
+                ']',
+            '}'
+        );
+
+        string memory encoded = Base64.encode(json);
+        return string(abi.encodePacked("data:application/json;base64,", encoded));
     }
 }

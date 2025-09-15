@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import WalletConnect from "@/components/WalletConnect";
 import { useBlockchainIntegration } from "@/hooks/useBlockchainIntegration";
+import { addToast } from "@/lib/toast";
 import { Event } from "@/types/contract";
 
 interface OwnedTicket {
@@ -18,8 +19,155 @@ export default function MyTicketsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tickets, setTickets] = useState<OwnedTicket[]>([]);
-  const { getTicketsByOwner, getEventDetails } = useBlockchainIntegration();
+  const { getTicketsByOwner, getEventDetails, refundAttendee, getTokenURI } = useBlockchainIntegration();
   const [origin, setOrigin] = useState<string>("");
+  const nowSec = Math.floor(Date.now() / 1000);
+  const GRACE_SECONDS = 48 * 3600; // 48h
+
+  const canRefund = (ev?: Event | null): boolean => {
+    if (!ev) return false;
+    if (ev.canceled) return true;
+    if (ev.occurred) return false;
+    if (ev.eventTimestamp && nowSec > (ev.eventTimestamp + GRACE_SECONDS)) return true;
+    return false;
+  };
+
+  const openNFTImage = async (tokenId: number) => {
+    // Open the window synchronously to avoid popup blockers
+    const win = typeof window !== 'undefined' ? window.open('about:blank', '_blank') : null;
+    // Write a loading page immediately
+    if (win) {
+      try {
+        win.document.open();
+        win.document.write('<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:20px;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial"><p>Loading NFT...</p></body></html>');
+        win.document.close();
+      } catch {}
+    }
+    try {
+      const uri = await getTokenURI(tokenId);
+      // tokenURI may be a data:application/json;... with { image: 'data:image/svg+xml;utf8,...' }
+      if (uri.startsWith('data:application/json')) {
+        const [header, payload] = uri.split(',', 2);
+        // Try base64 first
+        const isBase64 = /;base64/i.test(header);
+        let jsonStr = '';
+        try {
+          if (isBase64) {
+            jsonStr = typeof atob !== 'undefined' ? atob(payload) : Buffer.from(payload, 'base64').toString('utf-8');
+          } else {
+            // Some implementations do not percent-encode. Use payload as-is if decode fails.
+            try {
+              jsonStr = decodeURIComponent(payload);
+            } catch {
+              jsonStr = payload;
+            }
+          }
+          const meta = JSON.parse(jsonStr);
+          const image: string | undefined = meta.image || meta.image_data;
+          if (image) {
+            if (win) {
+              win.document.open();
+              if (image.startsWith('data:image/svg+xml')) {
+                const [hdr, payload] = image.split(',', 2);
+                const isB64 = /;base64/i.test(hdr);
+                let svgMarkup = '';
+                try {
+                  if (isB64) svgMarkup = typeof atob !== 'undefined' ? atob(payload) : Buffer.from(payload, 'base64').toString('utf-8');
+                  else {
+                    try { svgMarkup = decodeURIComponent(payload); } catch { svgMarkup = payload; }
+                  }
+                } catch { svgMarkup = payload; }
+                win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0">${svgMarkup}</body></html>`);
+              } else if (image.startsWith('data:image/')) {
+                win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0"><img alt="NFT" src="${image}"/></body></html>`);
+              } else if (image.trim().startsWith('<svg')) {
+                win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0">${image}</body></html>`);
+              } else {
+                win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0"><a href="${image}" target="_blank" rel="noopener noreferrer">Open image</a></body></html>`);
+              }
+              win.document.close();
+            } else {
+              window.open(image, '_blank');
+            }
+            return;
+          }
+        } catch {
+          // If JSON.parse failed (e.g., image contains unescaped quotes), try to extract image URL heuristically
+          const startIdx = jsonStr.indexOf('data:image/svg+xml');
+          if (startIdx !== -1) {
+            // Find end of svg by searching for closing tag
+            const endTag = '</svg>';
+            const endIdx = jsonStr.indexOf(endTag, startIdx);
+            if (endIdx !== -1) {
+              const svgContent = jsonStr.substring(startIdx, endIdx + endTag.length);
+              if (win) {
+                win.document.open();
+                win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0">${svgContent}</body></html>`);
+                win.document.close();
+              } else {
+                const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
+                window.open(dataUrl, '_blank');
+              }
+              return;
+            }
+          }
+          // Try extracting raw <svg> markup
+          const svgStart = jsonStr.indexOf('<svg');
+          const svgEndTag = '</svg>';
+          const svgEnd = svgStart !== -1 ? jsonStr.indexOf(svgEndTag, svgStart) : -1;
+          if (svgStart !== -1 && svgEnd !== -1) {
+            const svgMarkup = jsonStr.substring(svgStart, svgEnd + svgEndTag.length);
+            if (win) {
+              win.document.open();
+              win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0">${svgMarkup}</body></html>`);
+              win.document.close();
+            } else {
+              const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgMarkup)}`;
+              window.open(dataUrl, '_blank');
+            }
+            return;
+          }
+          // Last resort: open the whole JSON data URL
+          if (win) {
+            win.location.href = uri;
+          } else {
+            window.open(uri, '_blank');
+          }
+          return;
+        }
+      }
+      // Fallback: if tokenURI is already an image data URL, open it directly
+      if (uri.startsWith('data:image/')) {
+        if (win) {
+          win.document.open();
+          win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0"><img alt="NFT" src="${uri}"/></body></html>`);
+          win.document.close();
+        } else window.open(uri, '_blank');
+        return;
+      }
+      // If tokenURI is raw SVG markup
+      if (uri.trim().startsWith('<svg')) {
+        if (win) {
+          win.document.open();
+          win.document.write(`<!doctype html><html><head><meta charset="utf-8"/></head><body style="margin:0">${uri}</body></html>`);
+          win.document.close();
+        } else {
+          const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(uri)}`;
+          window.open(dataUrl, '_blank');
+        }
+        return;
+      }
+      // Otherwise just open whatever URI it is
+      if (win) win.location.href = uri; else window.open(uri, '_blank');
+    } catch (e) {
+      console.error('Failed to open NFT image', e);
+      if (win) {
+        win.document.open();
+        win.document.write('<p style="font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial">Failed to open NFT image. Check console for details.</p>');
+        win.document.close();
+      }
+    }
+  };
 
   const handleConnect = async (address: string) => {
     setWalletAddress(address);
@@ -62,7 +210,7 @@ export default function MyTicketsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">EventX</Link>
+              <Link href="/" className="text-2xl font-bold text-blue-600">Evvnt</Link>
               <span className="ml-2 text-sm text-gray-500">My Tickets</span>
             </div>
             <div className="flex items-center gap-6">
@@ -110,7 +258,20 @@ export default function MyTicketsPage() {
                   <div key={t.tokenId} className="border border-gray-200 rounded-lg p-6">
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold text-gray-900">Ticket #{t.tokenId}</h3>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Seat {t.seatNumber + 1}</span>
+                      <div className="flex items-center gap-2">
+                        {t.event && (
+                          t.event.canceled ? (
+                            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Canceled</span>
+                          ) : t.event.occurred ? (
+                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Ended</span>
+                          ) : t.event.eventTimestamp && nowSec > (t.event.eventTimestamp + GRACE_SECONDS) ? (
+                            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Refund Available</span>
+                          ) : (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Active</span>
+                          )
+                        )}
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Seat {t.seatNumber + 1}</span>
+                      </div>
                     </div>
                     {t.event ? (
                       <>
@@ -123,6 +284,40 @@ export default function MyTicketsPage() {
                     )}
                     <div className="mt-4 text-sm text-gray-500">
                       <p>Event ID: {t.occasionId}</p>
+                    </div>
+
+                    {/* Refund */}
+                    {canRefund(t.event) && (
+                      <div className="mt-3">
+                        <button
+                          className="w-full text-sm bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700"
+                          onClick={async () => {
+                            const ok = await refundAttendee(t.tokenId);
+                            if (ok) {
+                              addToast({ type: 'success', title: 'Refund requested', message: `Refund processed for Ticket #${t.tokenId}.` });
+                              // Reload after a short delay
+                              setTimeout(() => {
+                                if (walletAddress) loadTickets(walletAddress);
+                              }, 1200);
+                            } else {
+                              addToast({ type: 'error', title: 'Refund failed', message: 'Unable to process refund. Please try again.' });
+                            }
+                          }}
+                        >
+                          Request Refund
+                        </button>
+                        <p className="text-xs text-gray-500 mt-1">Refunds available when an event is canceled or 48h after the event if not marked occurred.</p>
+                      </div>
+                    )}
+
+                    {/* View NFT */}
+                    <div className="mt-3">
+                      <button
+                        className="w-full text-sm bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                        onClick={() => openNFTImage(t.tokenId)}
+                      >
+                        View NFT
+                      </button>
                     </div>
 
                     {/* Verification QR & Link */}

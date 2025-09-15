@@ -45,7 +45,7 @@ In plain words:
 
 ## Contract Addresses
 
-- Ticket (ERC‑721): `0x9c8447b583dc5ff7a25289ca1f7dd6637ff81955` (Somnia Testnet)
+- Ticket (ERC‑721): `0x601379ceeccad446941b2c4e43b74e22ecbdde53` (Somnia Testnet)
   - Chain ID: 50312
   - RPC: https://dream-rpc.somnia.network
 

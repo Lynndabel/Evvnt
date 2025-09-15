@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Event } from '@/types/contract';
 import { formatPrice } from '@/lib/contract';
 import { useBlockchainIntegration } from '@/hooks/useBlockchainIntegration';
+import { addToast } from '@/lib/toast';
 
 interface OrganizerDashboardProps {
   userAddress: string;
@@ -19,7 +20,7 @@ export default function OrganizerDashboard({
   onCreateEvent 
 }: OrganizerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'analytics'>('overview');
-  const { getRegistrationsForEvent } = useBlockchainIntegration();
+  const { getRegistrationsForEvent, cancelEvent: cancelEventOnChain, markEventOccurred: markOccurredOnChain, withdrawOrganizer: withdrawOnChain } = useBlockchainIntegration();
   const [openRegs, setOpenRegs] = useState<Record<number, boolean>>({});
   const [regsData, setRegsData] = useState<Record<number, { loading: boolean; items: Array<{ tokenId: number; owner: string; seatNumber: number }> }>>({});
 
@@ -32,6 +33,35 @@ export default function OrganizerDashboard({
       const items = await getRegistrationsForEvent(eventId);
       setRegsData(prev => ({ ...prev, [eventId]: { loading: false, items } }));
     }
+  };
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const GRACE_SECONDS = 48 * 3600; // 48 hours
+
+  const formatCountdown = (target?: number) => {
+    if (!target) return '';
+    const d = Math.max(0, target - nowSec);
+    const hrs = Math.floor(d / 3600);
+    const mins = Math.floor((d % 3600) / 60);
+    return `${hrs}h ${mins}m`;
+  };
+
+  const onCancelEvent = async (ev: Event) => {
+    const ok = await cancelEventOnChain(ev.id);
+    if (ok) addToast({ type: 'success', title: 'Event canceled', message: `${ev.title} was canceled.` });
+    else addToast({ type: 'error', title: 'Cancel failed', message: 'Unable to cancel event.' });
+  };
+
+  const onMarkOccurred = async (ev: Event) => {
+    const ok = await markOccurredOnChain(ev.id);
+    if (ok) addToast({ type: 'success', title: 'Marked occurred', message: `${ev.title} marked as occurred.` });
+    else addToast({ type: 'error', title: 'Mark failed', message: 'Unable to mark as occurred.' });
+  };
+
+  const onWithdraw = async (ev: Event) => {
+    const ok = await withdrawOnChain(ev.id);
+    if (ok) addToast({ type: 'success', title: 'Withdrawn', message: `Proceeds withdrawn for ${ev.title}.` });
+    else addToast({ type: 'error', title: 'Withdraw failed', message: 'Unable to withdraw proceeds.' });
   };
 
   if (!isApprovedOrganizer) {
@@ -216,11 +246,42 @@ export default function OrganizerDashboard({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {organizerEvents.map((event) => (
                   <div key={event.id} className="border border-gray-200 rounded-lg p-6">
-                    <h4 className="font-semibold text-gray-900 mb-2">{event.title}</h4>
+                    <div className="flex items-start justify-between gap-4">
+                      <h4 className="font-semibold text-gray-900 mb-2">{event.title}</h4>
+                      {/* Status badge */}
+                      <div>
+                        {event.canceled ? (
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">Canceled</span>
+                        ) : event.occurred ? (
+                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">Ended</span>
+                        ) : event.eventTimestamp && nowSec > (event.eventTimestamp + GRACE_SECONDS) ? (
+                          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Refund Available</span>
+                        ) : event.eventTimestamp && nowSec >= event.eventTimestamp ? (
+                          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Ongoing</span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Upcoming</span>
+                        )}
+                      </div>
+                    </div>
                     <div className="space-y-2 text-sm text-gray-600 mb-4">
                       <p>{event.date} at {event.time}</p>
                       <p>{event.location}</p>
                       <p className="font-medium text-blue-600">{formatPrice(event.price)} ETH</p>
+                      {/* Countdown */}
+                      {event.eventTimestamp && !event.canceled && !event.occurred && (
+                        <p className="text-xs text-gray-500">
+                          Starts in: {nowSec < event.eventTimestamp ? formatCountdown(event.eventTimestamp) : '0h 0m'}
+                          {event.eventTimestamp && nowSec >= event.eventTimestamp && (
+                            <>
+                              {' '}• Grace left: {formatCountdown(event.eventTimestamp + GRACE_SECONDS)}
+                            </>
+                          )}
+                        </p>
+                      )}
+                      {/* Escrow */}
+                      {typeof event.escrowBalance === 'bigint' && (
+                        <p className="text-xs text-gray-500">Escrow: {(Number(event.escrowBalance) / 1e18).toFixed(4)} ETH</p>
+                      )}
                     </div>
                     
                     <div className="flex justify-between items-center mb-4">
@@ -235,15 +296,48 @@ export default function OrganizerDashboard({
                       ></div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => toggleRegistrations(event.id)}
                         className="flex-1 text-sm bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-gray-200 transition-colors"
                       >
                         {openRegs[event.id] ? 'Hide Registrations' : 'View Registrations'}
                       </button>
-                      <button className="flex-1 text-sm bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 transition-colors">
-                        Manage
+                      {/* Cancel Event */}
+                      <button
+                        onClick={() => onCancelEvent(event)}
+                        disabled={Boolean(event.canceled) || Boolean(event.occurred) || (event.eventTimestamp ? nowSec >= event.eventTimestamp : false)}
+                        className={`flex-1 text-sm py-2 px-3 rounded transition-colors ${
+                          (event.canceled || event.occurred || (event.eventTimestamp ? nowSec >= event.eventTimestamp : false))
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-red-600 text-white hover:bg-red-700'
+                        }`}
+                      >
+                        Cancel Event
+                      </button>
+                      {/* Mark Occurred */}
+                      <button
+                        onClick={() => onMarkOccurred(event)}
+                        disabled={Boolean(event.canceled) || Boolean(event.occurred) || !(event.eventTimestamp ? nowSec >= event.eventTimestamp : false)}
+                        className={`flex-1 text-sm py-2 px-3 rounded transition-colors ${
+                          (event.canceled || event.occurred || !(event.eventTimestamp ? nowSec >= event.eventTimestamp : false))
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        }`}
+                      >
+                        Mark Occurred
+                      </button>
+                      {/* Withdraw Proceeds */}
+                      <button
+                        onClick={() => onWithdraw(event)}
+                        disabled={Boolean(event.canceled) || !Boolean(event.occurred) || !(typeof event.escrowBalance === 'bigint' && event.escrowBalance > 0n)}
+                        className={`flex-1 text-sm py-2 px-3 rounded transition-colors ${
+                          (event.canceled || !event.occurred || !(typeof event.escrowBalance === 'bigint' && event.escrowBalance > 0n))
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                      >
+                        Withdraw Proceeds
                       </button>
                     </div>
 

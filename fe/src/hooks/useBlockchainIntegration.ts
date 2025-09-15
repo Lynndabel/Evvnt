@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { TICKET_CONTRACT_ABI } from '@/lib/contract-abi';
-import { CONTRACT_CONFIG, DEFAULT_RPC_URL } from '@/lib/contract';
+import { CONTRACT_CONFIG, DEFAULT_RPC_URL, formatEventFromContract } from '@/lib/contract';
 import { Event } from '@/types/contract';
 
 interface UseBlockchainIntegrationReturn {
@@ -15,8 +15,13 @@ interface UseBlockchainIntegrationReturn {
   getTicketsByOwner: (owner: string) => Promise<Array<{ tokenId: number; occasionId: number; seatNumber: number }>>;
   getOwnerOf: (tokenId: number) => Promise<string>;
   getTicketDetailsById: (tokenId: number) => Promise<{ occasionId: number; seatNumber: number; isForSale: boolean; resalePrice: bigint; originalOwner: string } | null>;
+  getTokenURI: (tokenId: number) => Promise<string>;
   isLoading: boolean;
   error: string | null;
+  cancelEvent: (eventId: number) => Promise<boolean>;
+  markEventOccurred: (eventId: number) => Promise<boolean>;
+  withdrawOrganizer: (eventId: number) => Promise<boolean>;
+  refundAttendee: (tokenId: number) => Promise<boolean>;
 }
 
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || CONTRACT_CONFIG.address;
@@ -60,6 +65,9 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
         ? ethers.parseEther(eventData.maxResalePrice)
         : priceInWei;
 
+      // Compute event timestamp (seconds since epoch) from date+time
+      const eventTimestamp = Math.floor(new Date(`${eventData.date}T${eventData.time}`).getTime() / 1000);
+
       const tx = await contract.list(
         eventData.title,
         priceInWei,
@@ -68,6 +76,7 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
         eventData.time,
         eventData.location,
         maxResalePriceInWei,
+        eventTimestamp,
         {
           value: ethers.parseUnits(organizerFee, 'wei')
         }
@@ -94,6 +103,89 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
       return 0;
     }
   }, [getReadContract]);
+
+  const getTokenURI = useCallback(async (tokenId: number): Promise<string> => {
+    try {
+      const contract = getReadContract();
+      const uri: string = await contract.tokenURI(tokenId);
+      return uri;
+    } catch (err: any) {
+      console.error('Error reading tokenURI:', err);
+      throw err;
+    }
+  }, [getReadContract]);
+
+  // Organizer: cancel event
+  const cancelEvent = useCallback(async (eventId: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const contract = await getContract();
+      const tx = await contract.cancelEvent(eventId);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      console.error('Error canceling event:', err);
+      setError(err.message || 'Failed to cancel event');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getContract]);
+
+  // Organizer: mark occurred
+  const markEventOccurred = useCallback(async (eventId: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const contract = await getContract();
+      const tx = await contract.markEventOccurred(eventId);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      console.error('Error marking occurred:', err);
+      setError(err.message || 'Failed to mark occurred');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getContract]);
+
+  // Organizer: withdraw proceeds
+  const withdrawOrganizer = useCallback(async (eventId: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const contract = await getContract();
+      const tx = await contract.withdrawOrganizer(eventId);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      console.error('Error withdrawing organizer funds:', err);
+      setError(err.message || 'Failed to withdraw proceeds');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getContract]);
+
+  // Attendee: refund
+  const refundAttendee = useCallback(async (tokenId: number): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const contract = await getContract();
+      const tx = await contract.refundAttendee(tokenId);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      console.error('Error refunding attendee:', err);
+      setError(err.message || 'Failed to refund');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getContract]);
 
   const getTicketDetailsById = useCallback(async (
     tokenId: number
@@ -229,19 +321,7 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     try {
       const contract = getReadContract();
       const eventDetails = await contract.getEventDetails(eventId);
-      
-      const event = {
-        id: Number(eventDetails.id),
-        title: eventDetails.title,
-        price: eventDetails.price,
-        tickets: Number(eventDetails.tickets),
-        maxTickets: Number(eventDetails.maxTickets),
-        date: eventDetails.date,
-        time: eventDetails.time,
-        location: eventDetails.location,
-        maxResalePrice: eventDetails.maxResalePrice,
-        organizer: eventDetails.organizer
-      };
+      const event = formatEventFromContract(eventDetails as any[]);
       
       // Debug logging
       console.log('getEventDetails Debug:', {
@@ -271,6 +351,11 @@ export const useBlockchainIntegration = (): UseBlockchainIntegrationReturn => {
     getTicketsByOwner,
     getOwnerOf,
     getTicketDetailsById,
+    getTokenURI,
+    cancelEvent,
+    markEventOccurred,
+    withdrawOrganizer,
+    refundAttendee,
     isLoading,
     error
   };

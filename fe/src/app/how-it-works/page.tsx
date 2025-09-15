@@ -10,7 +10,7 @@ export default function HowItWorks() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">EventX</Link>
+              <Link href="/" className="text-2xl font-bold text-blue-600">Evnnt</Link>
               <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
             </div>
             
@@ -44,7 +44,7 @@ export default function HowItWorks() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Getting Started</h2>
-            <p className="text-lg text-gray-600">Follow these simple steps to start using EventX</p>
+            <p className="text-lg text-gray-600">Follow these simple steps to start using Evvnt</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
@@ -167,7 +167,7 @@ export default function HowItWorks() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Smart Contract Functions</h2>
-            <p className="text-lg text-gray-600">Understanding the blockchain technology behind EventX</p>
+            <p className="text-lg text-gray-600">Understanding the blockchain technology behind Evvnt</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -350,7 +350,7 @@ export default function HowItWorks() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Experience the Future?</h2>
           <p className="text-xl mb-8 text-blue-100">
-            Join thousands of users who trust EventX for secure, transparent event ticketing
+            Join thousands of users who trust Evvnt for secure, transparent event ticketing
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
@@ -374,7 +374,7 @@ export default function HowItWorks() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h4 className="text-2xl font-bold mb-4">EventX</h4>
+              <h4 className="text-2xl font-bold mb-4">Evvnt</h4>
               <p className="text-gray-400 mb-4">
                 The future of event ticketing is here. Secure, transparent, and decentralized.
               </p>
@@ -398,7 +398,7 @@ export default function HowItWorks() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 EventX. All rights reserved.</p>
+            <p>&copy; 2024 Evvnt. All rights reserved.</p>
           </div>
         </div>
       </footer>

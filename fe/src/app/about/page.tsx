@@ -10,7 +10,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">EventX</Link>
+              <Link href="/" className="text-2xl font-bold text-blue-600">Evvnt</Link>
               <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
             </div>
             
@@ -32,7 +32,7 @@ export default function About() {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">About EventX</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">About Evvnt</h1>
           <p className="text-xl md:text-2xl text-blue-100">
             Revolutionizing event ticketing through blockchain technology
           </p>
@@ -45,7 +45,7 @@ export default function About() {
           <div className="prose prose-lg max-w-none">
             <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Mission</h2>
             <p className="text-lg text-gray-600 mb-8">
-              EventX is a decentralized event ticketing platform built on blockchain technology. 
+              Evvnt is a decentralized event ticketing platform built on blockchain technology. 
               We're committed to solving the fundamental problems in the traditional ticketing industry: 
               fraud, scalping, lack of transparency, and unfair pricing.
             </p>
@@ -199,7 +199,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h4 className="text-2xl font-bold mb-4">EventX</h4>
+              <h4 className="text-2xl font-bold mb-4">Evvnt</h4>
               <p className="text-gray-400 mb-4">
                 The future of event ticketing is here. Secure, transparent, and decentralized.
               </p>
@@ -223,7 +223,7 @@ export default function About() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 EventX. All rights reserved.</p>
+            <p>&copy; 2025 Evvnt. All rights reserved.</p>
           </div>
         </div>
       </footer>

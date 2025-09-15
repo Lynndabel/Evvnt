@@ -93,7 +93,7 @@ export default function EventDetailsPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">EventX</Link>
+              <Link href="/" className="text-2xl font-bold text-blue-600">Evnnt</Link>
               <span className="ml-2 text-sm text-gray-500">Event Details</span>
             </div>
             <nav className="flex items-center gap-6">
