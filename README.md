@@ -18,49 +18,23 @@ A fully on‑chain event ticketing platform where every ticket is a unique ERC�
 
 ## Architecture
 
-Note: GitHub renders Mermaid diagrams. If you don’t see the diagrams below, view this README directly on GitHub or switch to the “Preview” tab.
-
 ```mermaid
-flowchart TD
-  A[User Browser (Next.js)] -->|JSON-RPC| B[Somnia Testnet]
-  A -->|Upload| C{IPFS Upload}
-  C -->|Primary| C1[Web3.Storage]
-  C -->|Fallback| C2[Pinata via /api/ipfs (server)]
-  A -->|API| D[/api/ipfs (server route)/]
-  A -->|Show QR| E[QR Image Service]
-  B -->|ERC‑721| F[Ticket Contract]
-  A -->|Read/Write| F
+flowchart LR
+  U[You] --> A[EventX Website]
+  A --> B[Somnia Network\n(create events, mint tickets)]
+  A --> C[IPFS\n(store event flyer & metadata)]
+  U -. share link or QR .-> Friends[Friends / Attendees]
+  Friends --> A
+  A --> D[/Verify Page/]
+  D --> B
 ```
 
-### User Flow (High Level)
-
-```mermaid
-sequenceDiagram
-  autonumber
-  participant U as User (Organizer/Attendee)
-  participant FE as Next.js Frontend
-  participant CH as Somnia Chain
-  participant IP as IPFS (Web3.Storage/Pinata)
-
-  U->>FE: Create Event (title/date/time/location...)
-  FE->>IP: Upload Flyer (image)
-  IP-->>FE: imageUrl (ipfs:// or gateway URL)
-  FE->>CH: list() with event details (payable fee)
-  CH-->>FE: tx receipt (eventId)
-  FE->>IP: Pin JSON {eventId, imageUrl}
-  IP-->>FE: metaCid
-  FE-->>U: Share link /event/{id}?metaCid=<cid> (QR)
-
-  U->>FE: Register (select seat)
-  FE->>CH: mintTicket(eventId, seat, price)
-  CH-->>FE: Transfer (tokenId)
-  FE-->>U: Toast: Ticket minted (Token #)
-
-  U->>FE: Verify (/verify?tokenId&eventId)
-  FE->>CH: ownerOf(tokenId), getTicketDetails(tokenId)
-  CH-->>FE: owner, seat, occasionId
-  FE-->>U: Valid/Invalid (details)
-```
+In plain words:
+- You use the EventX website to create an event and upload a flyer.
+- The flyer is saved on decentralized storage (IPFS).
+- The event is created on the Somnia blockchain, and a share link + QR are generated.
+- Attendees open the link, pick a seat, and mint a ticket (an NFT) on Somnia.
+- At the venue, staff scan the ticket’s QR to instantly check on-chain if it’s valid.
 
 - Reads go directly to Somnia (public RPC).
 - Writes (mint, create) go on chain via wallet.
