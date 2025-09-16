@@ -24,7 +24,6 @@ function VerifyClient() {
   const [owner, setOwner] = useState<string>('');
   const [seatNumber, setSeatNumber] = useState<number | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
-  const [wallet, setWallet] = useState<string>('');
   const [approvedOrganizer, setApprovedOrganizer] = useState<boolean>(false);
   const [checked, setChecked] = useState<boolean>(false);
 
@@ -74,7 +73,6 @@ function VerifyClient() {
   }, [tokenId, eventId, getTicketDetailsById, getOwnerOf, getEventDetails, isCheckedIn]);
 
   const handleConnect = async (address: string) => {
-    setWallet(address);
     try {
       const ok = await checkOrganizerStatus(address);
       setApprovedOrganizer(ok);

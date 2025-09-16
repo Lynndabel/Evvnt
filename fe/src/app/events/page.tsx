@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import EventCard from '@/components/EventCard';
 import SeatSelection from '@/components/SeatSelection';
 import WalletConnect from '@/components/WalletConnect';
@@ -22,18 +22,7 @@ export default function EventsPage() {
   const { mintTicket, getEventDetails, getTotalOccassions, error: blockchainError } = useBlockchainIntegration();
 
   // Load existing events from chain on initial render
-  useEffect(() => {
-    const load = async () => {
-      try {
-        await reloadEvents();
-      } catch (e) {
-        console.error('Failed to load events from chain', e);
-      }
-    };
-    load();
-  }, [getTotalOccassions, getEventDetails]);
-
-  const reloadEvents = async () => {
+  const reloadEvents = useCallback(async () => {
     const total = await getTotalOccassions();
     const loaded: Event[] = [];
     const imgMapRaw = typeof window !== 'undefined' ? localStorage.getItem('event_images') : null;
@@ -46,9 +35,22 @@ export default function EventsPage() {
       }
     }
     setEvents(loaded);
-  };
+  }, [getTotalOccassions, getEventDetails]);
 
-  const handleWalletConnect = async (_address: string) => {
+  useEffect(() => {
+    const load = async () => {
+      try {
+        await reloadEvents();
+      } catch (e) {
+        console.error('Failed to load events from chain', e);
+      }
+    };
+    load();
+  }, [reloadEvents]);
+
+  // reloadEvents defined above with useCallback
+
+  const handleWalletConnect = async () => {
     setIsConnected(true);
   };
 
