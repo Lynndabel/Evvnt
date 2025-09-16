@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -9,7 +9,7 @@ import { Event } from '@/types/contract';
 import WalletConnect from '@/components/WalletConnect';
 import { addToast } from '@/lib/toast';
 
-export default function VerifyPage() {
+function VerifyClient() {
   const search = useSearchParams();
   const tokenIdParam = search.get('tokenId');
   const eventIdParam = search.get('eventId');
@@ -186,5 +186,13 @@ export default function VerifyPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-600">Loading…</div>}>
+      <VerifyClient />
+    </Suspense>
   );
 }
