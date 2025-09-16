@@ -42,12 +42,12 @@ export default function WalletConnect({ onConnect }: WalletConnectProps) {
       } else {
         setError('No accounts found');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Wallet connection error:', error);
-      
-      if (error.code === 4001) {
+      const err = error as { code?: number } | undefined;
+      if (err?.code === 4001) {
         setError('Connection rejected by user');
-      } else if (error.code === -32002) {
+      } else if (err?.code === -32002) {
         setError('Connection request already pending');
       } else {
         setError('Failed to connect wallet');
@@ -60,6 +60,7 @@ export default function WalletConnect({ onConnect }: WalletConnectProps) {
   const disconnectWallet = () => {
     setAccount('');
     setError('');
+    onConnect?.('');
   };
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function WalletConnect({ onConnect }: WalletConnectProps) {
         } else {
           setAccount('');
           setError('');
+          onConnect?.('');
         }
       };
 

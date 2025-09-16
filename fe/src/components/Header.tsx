@@ -3,8 +3,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import WalletConnect from '@/components/WalletConnect';
+import { useState, useCallback } from 'react';
 
 export default function Header() {
+  const [account, setAccount] = useState<string>('');
+  const handleConnect = useCallback((addr: string) => {
+    setAccount(addr);
+  }, []);
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,12 +39,14 @@ export default function Header() {
               >
                 Events
               </Link>
-              <Link
-                href="/organizer"
-                className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-              >
-                Organizer
-              </Link>
+              {account && (
+                <Link
+                  href="/organizer"
+                  className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                >
+                  Organizer
+                </Link>
+              )}
               <Link
                 href="/my-tickets"
                 className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
@@ -49,7 +56,7 @@ export default function Header() {
             </nav>
           </div>
           <div className="flex items-center">
-            <WalletConnect onConnect={() => {}} />
+            <WalletConnect onConnect={handleConnect} />
           </div>
           {/* Mobile menu button (placeholder) */}
           <div className="-mr-2 flex items-center md:hidden">

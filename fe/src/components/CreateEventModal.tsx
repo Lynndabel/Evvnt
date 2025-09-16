@@ -4,7 +4,6 @@ import React from 'react';
 import { useState } from 'react';
 import { uploadToIPFS } from '@/lib/ipfs';
 import { addToast } from '@/lib/toast';
-import LocationPicker from './LocationPicker';
 
 interface CreateEventModalProps {
   onClose: () => void;
@@ -253,9 +252,10 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                     try {
                       const url = await uploadToIPFS(file);
                       setFormData(prev => ({ ...prev, imageUrl: url }));
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                       console.error('Image upload failed', err);
-                      addToast({ type: 'error', title: 'Upload failed', message: err?.message || 'Image upload failed. Please try again.' });
+                      const e = err as { message?: string } | undefined;
+                      addToast({ type: 'error', title: 'Upload failed', message: e?.message || 'Image upload failed. Please try again.' });
                     } finally {
                       setUploading(false);
                     }
@@ -270,7 +270,7 @@ export default function CreateEventModal({ onClose, onCreateEvent, isLoading }: 
                   <p className="text-xs text-gray-500 mt-1 break-all">{formData.imageUrl}</p>
                 </div>
               )}
-              <p className="text-xs text-gray-500 mt-1">Image will be uploaded to IPFS (Web3.Storage). Configure your token in NEXT_PUBLIC_WEB3_STORAGE_TOKEN.</p>
+              <p className="text-xs text-gray-500 mt-1">Image will be uploaded to IPFS via Pinata.</p>
             </div>
 
             {/* Max Resale Price */}

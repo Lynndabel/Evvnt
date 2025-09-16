@@ -1,4 +1,13 @@
 # Evvnt — Transparent Web3 Ticketing
+## Media Uploads (Pinata/IPFS)
+- All image uploads go through the Next.js API route `fe/src/app/api/ipfs/route.ts`, which forwards to Pinata.
+- Set the server env `PINATA_JWT` (Vercel Project Settings → Environment Variables) to a valid Pinata JWT.
+- Local development: you can temporarily set `PINATA_JWT` in `fe/.env.local` (do not commit secrets).
+- Upload flow in code:
+  - Frontend: `uploadToIPFS(file)` in `fe/src/lib/ipfs.ts`
+  - Server: `POST /api/ipfs` handles `pinFileToIPFS` and `pinJSONToIPFS`
+- Note: Web3.Storage is currently disabled in code to simplify setup and reduce friction.
+
 
 Evvnt is a minimal, elegant Web3 ticketing platform. Organizers can create events with price/seat controls, attendees buy in seconds, and check-in is instant with on-chain verification.
 
@@ -166,6 +175,8 @@ Create `fe/.env.local` if required (example values):
 NEXT_PUBLIC_CHAIN_ID=50312
 NEXT_PUBLIC_TICKET_ADDRESS=0xc8966abd81cab4d2f683449912ca72ac0057ad48
 NEXT_PUBLIC_RPC_URL= <somnia_testnet_rpc>
+# Server-side only (for uploads via Pinata; do NOT commit real secrets)
+PINATA_JWT= <pinata_jwt_token>
 ```
 
 

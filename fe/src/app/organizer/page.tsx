@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import OrganizerDashboard from '@/components/OrganizerDashboard';
 import CreateEventModal from '@/components/CreateEventModal';
 import { useBlockchainIntegration } from '@/hooks/useBlockchainIntegration';
@@ -26,18 +26,7 @@ export default function OrganizerPage() {
 
   const { createEvent, getEventDetails, getTotalOccassions, error: blockchainError } = useBlockchainIntegration();
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        await reloadEvents();
-      } catch (e) {
-        console.error('Failed to load events for organizer', e);
-      }
-    };
-    load();
-  }, [getTotalOccassions, getEventDetails]);
-
-  const reloadEvents = async () => {
+  const reloadEvents = useCallback(async () => {
     const total = await getTotalOccassions();
     const loaded: Event[] = [];
     const imgMapRaw = typeof window !== 'undefined' ? localStorage.getItem('event_images') : null;
@@ -50,14 +39,60 @@ export default function OrganizerPage() {
       }
     }
     setEvents(loaded);
-  };
+  }, [getTotalOccassions, getEventDetails]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        await reloadEvents();
+      } catch (e) {
+        console.error('Failed to load events for organizer', e);
+      }
+    };
+    load();
+  }, [reloadEvents]);
+
+  // reloadEvents defined above with useCallback
 
   const organizerEvents = isConnected && userAddress
     ? events.filter(event => event.organizer?.toLowerCase() === userAddress.toLowerCase())
     : [];
 
-  // For now, connect logic is handled by the header WalletConnect. Expose a callback if needed later.
-  // You can wire a global context to update isConnected/userAddress app-wide.
+  // Detect connection via window.ethereum (no button here; header handles connect UI)
+  type Ethereumish = {
+    request: (args: { method: string }) => Promise<string[]>;
+    on?: (event: string, handler: (accounts: string[]) => void) => void;
+    removeListener?: (event: string, handler: (accounts: string[]) => void) => void;
+  };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const eth = (window as unknown as { ethereum?: Ethereumish }).ethereum;
+    if (!eth) return;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        setUserAddress(accounts[0]);
+        setIsConnected(true);
+      } else {
+        setUserAddress('');
+        setIsConnected(false);
+      }
+    };
+
+    (async () => {
+      try {
+        const accounts = await eth.request({ method: 'eth_accounts' });
+        handleAccountsChanged(accounts);
+      } catch {
+        // ignore
+      }
+    })();
+
+    eth.on?.('accountsChanged', handleAccountsChanged);
+    return () => {
+      eth.removeListener?.('accountsChanged', handleAccountsChanged);
+    };
+  }, []);
 
   const handleCreateEventSubmit = async (eventData: CreateEventData) => {
     setIsLoading(true);
@@ -98,7 +133,13 @@ export default function OrganizerPage() {
             userAddress={userAddress}
             isApprovedOrganizer={true}
             organizerEvents={organizerEvents}
-            onCreateEvent={() => setShowCreateModal(true)}
+            onCreateEvent={() => {
+              if (!isConnected) {
+                addToast({ type: 'error', title: 'Connect wallet', message: 'Please connect your wallet before creating an event.' });
+                return;
+              }
+              setShowCreateModal(true);
+            }}
           />
         </div>
       </section>

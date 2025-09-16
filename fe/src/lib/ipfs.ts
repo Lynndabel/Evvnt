@@ -1,33 +1,8 @@
 export async function uploadToIPFS(file: File): Promise<string> {
-  const token = process.env.NEXT_PUBLIC_WEB3_STORAGE_TOKEN;
-  // Prefer Web3.Storage if token is available
-  if (token) {
-    try {
-      const res = await fetch('https://api.web3.storage/upload', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/octet-stream',
-        },
-        body: file,
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        // Fall through to Pinata on 5xx or maintenance responses
-        throw new Error(`web3.storage_error:${res.status}:${text}`);
-      }
-      const data = await res.json();
-      const cid: string = data.cid;
-      return `https://ipfs.io/ipfs/${cid}`;
-    } catch (err: any) {
-      // Attempt Pinata fallback on any failure
-      console.warn('Web3.Storage upload failed, attempting Pinata fallback', err?.message || err);
-      const pinataUrl = await uploadViaPinata(file);
-      return pinataUrl;
-    }
-  }
+  // Web3.Storage temporarily disabled; always route via Pinata-backed API
+  // const token = process.env.NEXT_PUBLIC_WEB3_STORAGE_TOKEN;
+  // if (token) { /* ... web3.storage upload here ... */ }
 
-  // Fallback: use local API route backed by Pinata (secure server-side JWT)
   return await uploadViaPinata(file);
 }
 
