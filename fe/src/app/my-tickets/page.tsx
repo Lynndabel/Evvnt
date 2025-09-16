@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import WalletConnect from "@/components/WalletConnect";
 import { useBlockchainIntegration } from "@/hooks/useBlockchainIntegration";
 import { addToast } from "@/lib/toast";
@@ -207,22 +205,6 @@ export default function MyTicketsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
-              </Link>
-              <span className="ml-2 text-sm text-gray-500">My Tickets</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <Link href="/" className="text-gray-600 hover:link-brand">Events</Link>
-              <WalletConnect onConnect={handleConnect} />
-            </div>
-          </div>
-        </div>
-      </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {!isConnected ? (

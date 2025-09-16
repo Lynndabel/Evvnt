@@ -93,12 +93,12 @@ export default function EventDetailsPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">Evnnt</Link>
-              <span className="ml-2 text-sm text-gray-500">Event Details</span>
+              <Link href="/" className="text-2xl font-bold text-brand-600 hover:link-brand">Evnnt</Link>
+              <span className="ml-2 text-sm text-gray-700">Event Details</span>
             </div>
             <nav className="flex items-center gap-6">
-              <Link href="/" className="text-gray-500 hover:text-blue-600">Events</Link>
-              <Link href="/my-tickets" className="text-gray-500 hover:text-blue-600">My Tickets</Link>
+              <Link href="/" className="text-gray-700 hover:link-brand">Events</Link>
+              <Link href="/my-tickets" className="text-gray-700 hover:link-brand">My Tickets</Link>
             </nav>
           </div>
         </div>
@@ -116,24 +116,24 @@ export default function EventDetailsPage() {
             {event ? (
               <>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">{event.title}</h1>
-                <div className="text-sm text-gray-600 mb-4">
-                  <p>{event.date} at {event.time}</p>
-                  <p>{event.location}</p>
-                  <p className="mt-1">Available: {event.tickets}/{event.maxTickets}</p>
+                <div className="text-sm text-gray-800 mb-4">
+                  <p className="font-medium">{event.date} at {event.time}</p>
+                  <p className="font-medium">{event.location}</p>
+                  <p className="mt-1 font-medium">Available: {event.tickets}/{event.maxTickets}</p>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   {/* Share & QR */}
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-700 mb-1">Share this event</p>
+                    <p className="text-sm font-semibold text-gray-800 mb-1">Share this event</p>
                     <div className="flex items-center gap-2 mb-2">
                       <input
-                        className="w-full border rounded px-2 py-1 text-sm"
+                        className="w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                         readOnly
                         value={shareUrl}
                       />
                       <button
-                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                        className="px-4 py-2 text-sm bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors"
                         onClick={() => shareUrl && navigator.clipboard.writeText(shareUrl)}
                       >Copy</button>
                     </div>
@@ -158,7 +158,7 @@ export default function EventDetailsPage() {
                     >
                       Open App to Register
                     </Link>
-                    <p className="text-xs text-gray-500 mt-2">Open the app, find this event, and select your seat to register.</p>
+                    <p className="text-xs text-gray-600 mt-2">Open the app, find this event, and select your seat to register.</p>
                   </div>
                 </div>
               </>

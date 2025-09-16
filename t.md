@@ -127,3 +127,35 @@ Transaction Hash: 0x24b0a6131d252491260b09d0a0ad9d71326f1929670cea8f21ad64eeee88
 
 ebele@Lyndabel MINGW64 ~/EventX/smart-contract (main)
 $ 
+
+
+
+
+ebele@Lyndabel MINGW64 ~/EventX/smart-contract (main)
+$ npx hardhat run scripts/deploy.ts --network somniaTestnet
+Compiling your Solidity contracts...
+Compiled 1 Solidity file with solc 0.8.28 (evm target: cancun)
+
+Deploying Ticket contract to Somnia Testnet...
+Deploying contracts with the account: 0x3bfbe4e3dcc472e9b1bdfc0c177de3459cf769bf
+Account balance: 93558966762000000000
+Deploying Ticket contract...
+Ticket contract deployed to: 0xc8966abd81cab4d2f683449912ca72ac0057ad48
+Contract owner: 0x3BFbE4E3dCC472E9B1bdFC0c177dE3459Cf769bf
+Deployment info saved to C:\Users\ebele\EventX\smart-contract\deployments\ticket-somnia-testnet.json
+
+=== Deployment Summary ===
+Network: Somnia Testnet
+Chain ID: 50312
+Deployer: 0x3bfbe4e3dcc472e9b1bdfc0c177de3459cf769bf
+Ticket Contract: 0xc8966abd81cab4d2f683449912ca72ac0057ad48
+Contract Owner: 0x3BFbE4E3dCC472E9B1bdFC0c177dE3459Cf769bf
+Transaction Hash: 0x7ab0494ad9444fc32fd8eac379fdcc978bccaba63c9b2e802810769faf08b699
+npm notice
+npm notice New major version of npm available! 10.9.2 -> 11.6.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.0
+npm notice To update run: npm install -g npm@11.6.0
+npm notice
+
+ebele@Lyndabel MINGW64 ~/EventX/smart-contract (main)
+$

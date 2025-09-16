@@ -1,194 +1,113 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import HowItWorksSlider from '@/components/HowItWorksSlider';
 
-export default function About() {
+export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
-              </Link>
-              <span className="ml-2 text-sm text-gray-500">Decentralized Ticketing</span>
-            </div>
-            
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/" className="text-gray-500 hover:link-brand">
-                Events
-              </Link>
-              <Link href="/about" className="text-gray-900 hover:link-brand font-medium">
-                About
-              </Link>
-              <Link href="/how-it-works" className="text-gray-500 hover:link-brand">
-                How It Works
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section */}
-      <section className="brand-hero text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">About Evvnt</h1>
-          <p className="text-xl md:text-2xl text-blue-100">
-            Revolutionizing event ticketing through blockchain technology
-          </p>
+      <section className="hero-section text-white">
+        <div className="hero-bg" />
+        <div className="hero-overlay" />
+        <div className="relative py-24">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow">About Evvnt</h1>
+            <p className="text-xl text-blue-100 drop-shadow">
+              Secure, transparent event ticketing powered by blockchain
+            </p>
+            <p className="mt-4 text-lg md:text-xl text-blue-100 drop-shadow">
+              Real tickets only. Fair resale with caps. Instant QR check‑in. Own your access.
+            </p>
+            <div className="accent-bar" />
+          </div>
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="prose prose-lg max-w-none">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Mission</h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Evvnt is a decentralized event ticketing platform built on blockchain technology. 
-              We're committed to solving the fundamental problems in the traditional ticketing industry: 
-              fraud, scalping, lack of transparency, and unfair pricing.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">What We Do</h3>
-                <ul className="space-y-4 text-gray-600">
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Provide secure, blockchain-based event ticketing</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Enable transparent and fair ticket resale markets</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Eliminate ticket fraud through NFT technology</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-green-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Empower event organizers with better tools</span>
-                  </li>
-                </ul>
+      {/* About Section */}
+      <section className="py-16 relative">
+        {/* Subtle gradient blobs */}
+        <div className="gradient-blob" style={{ top: '-3rem', left: '-4rem' }} />
+        <div className="gradient-blob" style={{ bottom: '-3rem', right: '-4rem', transform: 'rotate(15deg)' }} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="max-w-none">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
+            <div className="rounded-2xl border border-gray-200 bg-white p-8 md:p-12 mb-12">
+              <div className="max-w-3xl">
+                <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-3 tracking-tight">Ticketing that’s simple, fair, and secure</h3>
+                <p className="text-gray-700 text-lg leading-relaxed">
+                  Evvnt helps organizers sell out faster and gives attendees a fair, transparent way to get in.
+                  No fake tickets. No price gouging. Just smooth entry with instant verification.
+                </p>
               </div>
 
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Why Blockchain?</h3>
-                <ul className="space-y-4 text-gray-600">
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-blue-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span><strong>Transparency:</strong> All transactions are publicly verifiable</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-blue-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span><strong>Security:</strong> Immutable records prevent fraud</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-blue-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span><strong>Ownership:</strong> True digital ownership of tickets</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg className="w-6 h-6 text-blue-500 mt-1 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span><strong>Automation:</strong> Smart contracts handle transactions</span>
-                  </li>
-                </ul>
+            </div>
+
+            {/* Why Evvnt (cyan cards) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <div className="p-6 rounded-xl border border-cyan-100 bg-cyan-50">
+                <h4 className="text-xl font-semibold text-cyan-950 mb-2">Real tickets only</h4>
+                <p className="text-cyan-900/80">Every ticket is unique and verifiable at the door.</p>
+              </div>
+              <div className="p-6 rounded-xl border border-cyan-100 bg-cyan-50">
+                <h4 className="text-xl font-semibold text-cyan-950 mb-2">Fair resale</h4>
+                <p className="text-cyan-900/80">Set caps and keep pricing under control.</p>
+              </div>
+              <div className="p-6 rounded-xl border border-cyan-100 bg-cyan-50">
+                <h4 className="text-xl font-semibold text-cyan-950 mb-2">Instant check‑in</h4>
+                <p className="text-cyan-900/80">Fast QR verification equals smooth entry.</p>
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Key Features</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">NFT Tickets</h3>
-                <p className="text-gray-600">Each ticket is a unique NFT, ensuring authenticity and preventing counterfeiting.</p>
-              </div>
 
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Resale Market</h3>
-                <p className="text-gray-600">Built-in marketplace for safe ticket reselling with price controls and authenticity guarantees.</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">How It Works</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">For Organizers</h4>
+                <HowItWorksSlider
+                  slides={[
+                    { title: 'Connect your wallet', description: 'Sign in with MetaMask or your preferred wallet.' },
+                    { title: 'Create your event', description: 'Add title, date/time, price, seats, and location.' },
+                    { title: 'Set resale rules', description: 'Cap resale prices and protect your brand reputation.' },
+                    { title: 'Go live and share', description: 'Share a link or QR. Track sales and check‑ins live.' },
+                  ]}
+                />
               </div>
-
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Smart Contracts</h3>
-                <p className="text-gray-600">Automated, trustless transactions powered by Ethereum smart contracts.</p>
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">For Attendees</h4>
+                <HowItWorksSlider
+                  slides={[
+                    { title: 'Open the event', description: 'Use a shared link or QR to view details and seats.' },
+                    { title: 'Pick a seat & pay', description: 'Confirm in your wallet. Ticket issues instantly.' },
+                    { title: 'Access your ticket', description: 'Your digital pass stays available on your phone.' },
+                    { title: 'Scan and enter', description: 'Show QR at the door for instant, verifiable check‑in.' },
+                  ]}
+                />
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Smart Contract Functions</h2>
-            
-            <div className="bg-gray-50 p-6 rounded-lg mb-8">
-              <h3 className="text-xl font-semibold mb-4">Core Contract Features</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Event Management</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• <code className="bg-gray-200 px-1 rounded">list()</code> - Create new events</li>
-                    <li>• <code className="bg-gray-200 px-1 rounded">getEventDetails()</code> - Retrieve event information</li>
-                    <li>• <code className="bg-gray-200 px-1 rounded">approveOrganizer()</code> - Manage event organizers</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Ticket Operations</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• <code className="bg-gray-200 px-1 rounded">mint()</code> - Purchase tickets</li>
-                    <li>• <code className="bg-gray-200 px-1 rounded">listTicketForSale()</code> - List for resale</li>
-                    <li>• <code className="bg-gray-200 px-1 rounded">buyResaleTicket()</code> - Purchase resale tickets</li>
-                  </ul>
-                </div>
+            {/* Trust & Transparency removed to reduce verbosity */}
+
+            {/* Bottom CTA Banner */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-8 md:p-10 mt-12 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="text-2xl font-semibold text-gray-900 tracking-tight">Bring transparent ticketing to your next event</h3>
+                <p className="text-gray-600 mt-1">Start selling in minutes and check in guests instantly.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link href="/events" className="px-6 py-3 rounded-lg btn-brand">Explore Events</Link>
+                <Link href="/organizer" className="px-6 py-3 rounded-lg border border-gray-300 text-gray-800 hover:bg-gray-50">Create an Event</Link>
               </div>
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Vision</h2>
-            <p className="text-lg text-gray-600 mb-8">
-              We envision a future where event ticketing is completely transparent, secure, and fair for everyone. 
-              By leveraging blockchain technology, we're building a platform that benefits event organizers, 
-              attendees, and the entire event ecosystem.
-            </p>
-
-            <div className="bg-blue-50 p-8 rounded-lg text-center">
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Join the Revolution</h3>
-              <p className="text-blue-700 mb-6">
-                Be part of the future of event ticketing. Experience the security, transparency, 
-                and fairness that blockchain technology brings to the industry.
-              </p>
+            <div className="bg-white p-8 rounded-lg text-center border border-gray-200 shadow-sm">
+              <h3 className="text-2xl font-bold text-black mb-4">Ready to get started?</h3>
+              <p className="text-gray-800 mb-6">Join thousands of users who trust Evvnt for secure, transparent event ticketing.</p>
               <Link 
-                href="/"
-                className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                href="/events" 
+                className="inline-block bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 Explore Events
               </Link>
@@ -196,42 +115,7 @@ export default function About() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <Link href="/" className="inline-flex items-center mb-4">
-                <Image src="/image.png" alt="Evvnt" width={80} height={80} className="h-20 w-20 object-contain" />
-              </Link>
-              <p className="text-gray-400 mb-4">
-                The future of event ticketing is here. Secure, transparent, and decentralized.
-              </p>
-            </div>
-            
-            <div>
-              <h5 className="font-semibold mb-4">Platform</h5>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><Link href="/how-it-works" className="hover:text-white">How It Works</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h5 className="font-semibold mb-4">Support</h5>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Contact Us</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 Evvnt. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
+
