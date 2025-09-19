@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![Evvnt Logo](https://via.placeholder.com/200x80/00bcd4/ffffff?text=EVVNT)
 
 **The future of event ticketing is here — transparent, fraud-proof, and fair.**
 
@@ -11,11 +10,13 @@
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-363636?logo=solidity)](https://soliditylang.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?logo=typescript)](https://www.typescriptlang.org/)
 
-[🚀 Live Demo](#) • [📖 Documentation](#) • [🐛 Report Bug](../../issues) • [💡 Request Feature](../../issues)
+[🚀 Live Demo](https://www.loom.com/share/7d8bf1b0467b4f40b46415bf8e2ed813?sid=da87293c-0c8d-41a1-9c5e-79839fe82e50) • [🚀 Live Demo](https://evvnt-fe.vercel.app/)[🐛 Report Bug](../../issues) • [💡 Request Feature](../../issues)
 
 </div>
 
 ---
+
+https://www.loom.com/share/7d8bf1b0467b4f40b46415bf8e2ed813?sid=da87293c-0c8d-41a1-9c5e-79839fe82e50
 
 ## 🌟 Overview
 
@@ -83,7 +84,7 @@ graph TB
 ### Prerequisites
 
 - **Node.js** 18+ 
-- **pnpm** (recommended) or npm
+- **npm** (recommended) or pnpm
 - **MetaMask** or compatible Web3 wallet
 
 ### Installation
@@ -102,7 +103,7 @@ cp .env.example .env.local
 # Edit .env.local with your configuration
 
 # Start development server
-pnpm dev
+npm dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to see the app running! 🎉
