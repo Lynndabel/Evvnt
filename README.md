@@ -1,217 +1,342 @@
-# Evvnt — Transparent Web3 Ticketing
-## Media Uploads (Pinata/IPFS)
-- All image uploads go through the Next.js API route `fe/src/app/api/ipfs/route.ts`, which forwards to Pinata.
-- Set the server env `PINATA_JWT` (Vercel Project Settings → Environment Variables) to a valid Pinata JWT.
-- Local development: you can temporarily set `PINATA_JWT` in `fe/.env.local` (do not commit secrets).
-- Upload flow in code:
-  - Frontend: `uploadToIPFS(file)` in `fe/src/lib/ipfs.ts`
-  - Server: `POST /api/ipfs` handles `pinFileToIPFS` and `pinJSONToIPFS`
-- Note: Web3.Storage is currently disabled in code to simplify setup and reduce friction.
+# 🎫 Evvnt — Transparent Web3 Ticketing Platform
 
+<div align="center">
 
-Evvnt is a minimal, elegant Web3 ticketing platform. Organizers can create events with price/seat controls, attendees buy in seconds, and check-in is instant with on-chain verification.
+![Evvnt Logo](https://via.placeholder.com/200x80/00bcd4/ffffff?text=EVVNT)
 
-This document is designed as a clear, hackathon-ready overview: architecture, product flow, smart contracts, and setup. It can double as a submission doc.
+**The future of event ticketing is here — transparent, fraud-proof, and fair.**
 
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Next.js](https://img.shields.io/badge/Next.js-13+-black?logo=next.js)](https://nextjs.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-363636?logo=solidity)](https://soliditylang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?logo=typescript)](https://www.typescriptlang.org/)
 
-## TL;DR
-- Transparent, fraud-proof tickets as on-chain assets
-- Fair resale with price caps, instant transfer and check-in
-- Minimal, performant Next.js frontend with modern UI/UX
+[🚀 Live Demo](#) • [📖 Documentation](#) • [🐛 Report Bug](../../issues) • [💡 Request Feature](../../issues)
 
+</div>
 
-## Live Contract (Testnet)
-- Network: `somnia-testnet` (chainId: `50312`)
-- Ticket contract: `0xc8966abd81cab4d2f683449912ca72ac0057ad48`
-- Deployer/Owner: `0x3BFbE4E3dCC472E9B1bdFC0c177dE3459Cf769bf`
-- Deployment record: `smart-contract/deployments/ticket-somnia-testnet.json`
+---
 
+## 🌟 Overview
 
-## Architecture
+Evvnt revolutionizes event ticketing by putting tickets on the blockchain. Say goodbye to fraud, scalping, and unfair practices. Our platform ensures transparent pricing, instant transfers, and verifiable ownership for both organizers and attendees.
 
-```mermaid
-flowchart LR
-  subgraph Frontend [Next.js App (fe/)]
-    UI[App Pages & Components]
-    Hooks[useBlockchainIntegration]
-    Wallet[WalletConnect]
-  end
+### ✨ Key Features
 
-  subgraph Contracts [Smart Contracts (smart-contract/)]
-    T[Ticket.sol]
-  end
+🔒 **Fraud-Proof Tickets** — Every ticket is a unique blockchain asset  
+💰 **Fair Resale Caps** — Prevent scalping with built-in price limits  
+⚡ **Instant Check-in** — QR code verification in milliseconds  
+🔄 **Automatic Refunds** — Smart contract enforced refund policies  
+🎨 **Modern UI/UX** — Clean, accessible design with smooth animations  
+📱 **Mobile-First** — Optimized for all devices and screen sizes
 
-  UI --> Hooks
-  Hooks <--> T
-  Wallet --> Hooks
-```
+---
 
-- Frontend (Next.js + TypeScript)
-  - Directory: `fe/`
-  - Pages:
-    - `about/` — Landing with animated hero, product value, and animated How It Works
-    - `events/` — Events marketplace (animated cyan hero, events grid)
-    - `my-tickets/` — Owned tickets, QR verification link/QR generation
-    - `organizer/` — Organizer dashboard (create events, view registrations, check-in, admin actions)
-  - Components: `WalletConnect`, `EventCard`, `SeatSelection`, `OrganizerDashboard`, `HowItWorksSlider`, `Header`, `Footer`
-  - Hooks: `useBlockchainIntegration` provides contract calls and handles chain I/O
-
-- Smart Contracts (Foundry/Hardhat style structure)
-  - Directory: `smart-contract/`
-  - Core: `contracts/Ticket.sol` (single-ticketing protocol)
-  - Scripts: `smart-contract/scripts/*` (deploy, approve organizer, etc.)
-  - Deployment records: `smart-contract/deployments/*.json`
-
-
-## Product Flow
+## 🏗️ Architecture
 
 ```mermaid
-sequenceDiagram
-  participant O as Organizer
-  participant UI as Evvnt UI
-  participant SC as Ticket Contract
-  participant A as Attendee
-
-  O->>UI: Connect wallet
-  O->>UI: Create event (title, seats, price, resale cap)
-  UI->>SC: createEvent(...)
-  Note right of SC: Event minted/stored on-chain
-
-  A->>UI: Open event page
-  A->>UI: Pick seat & buy
-  UI->>SC: mintTicket(eventId, seat, price)
-  Note right of SC: Ticket is an on-chain asset
-
-  A->>UI: Show QR at entry
-  UI->>SC: checkIn(tokenId)
-  Note right of SC: Check-in marked on-chain
-
-  UI->>SC: refundAttendee(tokenId) (if canceled or after grace)
-  Note right of SC: Enforced refund rules
+graph TB
+    subgraph "Frontend Layer"
+        A[Next.js App Router]
+        B[React Components]
+        C[Wallet Integration]
+        D[IPFS Media Handler]
+    end
+    
+    subgraph "Blockchain Layer"
+        E[Ticket Smart Contract]
+        F[Event Management]
+        G[Check-in System]
+        H[Refund Logic]
+    end
+    
+    subgraph "External Services"
+        I[Pinata IPFS]
+        J[Wallet Providers]
+        K[RPC Endpoints]
+    end
+    
+    A --> B
+    B --> C
+    A --> D
+    C --> E
+    E --> F
+    E --> G
+    E --> H
+    D --> I
+    C --> J
+    E --> K
+    
+    classDef frontend fill:#e1f5fe
+    classDef blockchain fill:#f3e5f5
+    classDef external fill:#e8f5e8
+    
+    class A,B,C,D frontend
+    class E,F,G,H blockchain
+    class I,J,K external
 ```
 
+---
 
-## Key Features
-- Organizer controls
-  - Event creation with seat limits, price, resale cap
-  - Cancellations, mark occurred, withdraw proceeds, view registrations
-- Attendee experience
-  - Seat selection, instant mint/transfer
-  - My Tickets: QR + verification link
-  - Refunds if canceled or after grace period (48h) when not marked occurred
-- Security
-  - On-chain uniqueness and ownership
-  - Check-in on-chain (prevents re-use)
-  - Resale price caps enforced in contract logic
-- UX
-  - Modern, minimal design with subtle animations
-  - Animated cyan hero for events, Ken Burns hero on landing
-  - Reduced-motion support for accessibility
-
-
-## Frontend Directory Map
-```
-fe/
-  public/
-    bg.jpg
-  src/
-    app/
-      about/
-      events/
-      my-tickets/
-      organizer/
-      layout.tsx
-      globals.css
-    components/
-      Header.tsx, Footer.tsx, EventCard.tsx, SeatSelection.tsx,
-      OrganizerDashboard.tsx, WalletConnect.tsx,
-      HowItWorksSlider.tsx
-    hooks/
-      useBlockchainIntegration.ts
-```
-
-
-## Contract Mechanics (Ticket.sol)
-- Each event is stored with:
-  - `price`, `maxTickets`, `tickets` (remaining), `organizer`, `eventTimestamp`, `maxResalePrice`, `escrowBalance`
-- Purchase flow
-  - `mintTicket(eventId, seatNumber, price)` mints the ticket asset
-  - Enforces pricing and seat availability
-- Check-in
-  - `checkIn(tokenId)` marks a ticket as used, preventing re-entry
-- Refunds
-  - Allowed if event canceled, or after grace (`48h`) if organizer hasn’t marked occurred
-- Organizer admin
-  - `cancelEvent`, `markEventOccurred`, `withdrawOrganizer`
-
-
-## Setup & Run
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- pnpm or npm
-- Wallet (MetaMask)
 
-### Frontend
-```
+- **Node.js** 18+ 
+- **pnpm** (recommended) or npm
+- **MetaMask** or compatible Web3 wallet
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/evvnt.git
+cd evvnt
+
+# Install dependencies
 cd fe
 pnpm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your configuration
+
+# Start development server
 pnpm dev
-# or
-npm install
-npm run dev
 ```
-- Development server: http://localhost:3000
-- Update chain config if needed in `fe/src/hooks/useBlockchainIntegration.ts`
 
-### Smart Contracts (optional)
-- Review `smart-contract/` for deployment scripts and addresses
-- Update `deployments/*.json` when deploying to new networks
+Visit [http://localhost:3000](http://localhost:3000) to see the app running! 🎉
 
+---
 
-## Environment Variables
-Create `fe/.env.local` if required (example values):
-```
+## 📋 Environment Setup
+
+Create `fe/.env.local`:
+
+```env
+# Network Configuration
 NEXT_PUBLIC_CHAIN_ID=50312
 NEXT_PUBLIC_TICKET_ADDRESS=0xc8966abd81cab4d2f683449912ca72ac0057ad48
-NEXT_PUBLIC_RPC_URL= <somnia_testnet_rpc>
-# Server-side only (for uploads via Pinata; do NOT commit real secrets)
-PINATA_JWT= <pinata_jwt_token>
+NEXT_PUBLIC_RPC_URL=https://somnia-testnet-rpc.example.com
+
+# IPFS Configuration (Server-side only)
+PINATA_JWT=your_pinata_jwt_token_here
 ```
 
+> ⚠️ **Important**: Never commit real API keys to version control!
 
-## Verification & QR
-- The My Tickets page generates a QR linking to `/verify?tokenId=<id>&eventId=<id>`
-- A simple verify view can read owner/checked-in status via `useBlockchainIntegration`
-- Staff scans QR and `checkIn` is performed by authorized roles (as configured)
+---
 
+## 🎯 User Journey
 
-## Security & Compliance
-- Reduced motion, accessible color contrast, and keyboard nav friendly
-- No private keys stored; all signing in wallet
-- Potential auditing points:
-  - Resale cap enforcement
-  - Check-in authorization controls
-  - Withdrawal and escrow balance integrity
+```mermaid
+journey
+    title Event Lifecycle on Evvnt
+    section Organizer
+      Create Event: 5: Organizer
+      Set Price & Seats: 4: Organizer
+      Monitor Sales: 3: Organizer
+      Check-in Attendees: 5: Organizer
+      Withdraw Proceeds: 5: Organizer
+    section Attendee
+      Browse Events: 4: Attendee
+      Select Seats: 5: Attendee
+      Purchase Tickets: 5: Attendee
+      Show QR at Entry: 5: Attendee
+      Rate Experience: 4: Attendee
+```
 
+---
 
-## Performance & Scalability
-- Static/SSR hybrid via Next.js App Router
-- Lightweight, dependency-minimal UI components
-- Easily shard events across pages and lazy-load details
+## 🏠 Project Structure
 
+```
+evvnt/
+├── fe/                          # Frontend Next.js application
+│   ├── public/                  # Static assets
+│   ├── src/
+│   │   ├── app/                 # App Router pages
+│   │   │   ├── about/          # Landing page
+│   │   │   ├── events/         # Event marketplace
+│   │   │   ├── my-tickets/     # User ticket management
+│   │   │   └── organizer/      # Organizer dashboard
+│   │   ├── components/         # Reusable UI components
+│   │   ├── hooks/              # Custom React hooks
+│   │   └── lib/                # Utility functions
+│   ├── package.json
+│   └── tailwind.config.js
+└── smart-contract/              # Smart contract code
+    ├── contracts/              # Solidity contracts
+    ├── scripts/                # Deployment scripts
+    ├── deployments/            # Deployment records
+    └── package.json
+```
 
-## Roadmap
-- Multi-network deployment and fallback RPCs
-- Email/SMS ticket delivery adapters
-- Organizer teams & roles
-- Analytics dashboard and CSV exports
-- Inline seat map visualization
+---
 
+## 🔧 Smart Contract Details
 
-## Team & Contributors
-- Built by the Evvnt team — contributions welcome via PRs.
+### 🎫 Ticket.sol Features
 
+| Function | Description | Access Level |
+|----------|-------------|--------------|
+| `createEvent()` | Create new event with pricing | Approved Organizers |
+| `mintTicket()` | Purchase ticket for specific seat | Public |
+| `checkIn()` | Mark ticket as used for entry | Organizer/Staff |
+| `cancelEvent()` | Cancel event and enable refunds | Organizer |
+| `withdrawOrganizer()` | Withdraw event proceeds | Organizer |
 
-## License
-- MIT (or specify your preferred license)
+### 🌐 Network Information
+
+- **Network**: Somnia Testnet
+- **Chain ID**: `50312`
+- **Contract**: [`0xc8966abd81cab4d2f683449912ca72ac0057ad48`](https://somnia-testnet-explorer.com/address/0xc8966abd81cab4d2f683449912ca72ac0057ad48)
+- **Deployer**: `0x3BFbE4E3dCC472E9B1bdFC0c177dE3459Cf769bf`
+
+---
+
+## 🔐 Security Features
+
+- ✅ **On-chain Ownership** — Tickets are non-fungible tokens
+- ✅ **Check-in Prevention** — Used tickets cannot be reused  
+- ✅ **Resale Protection** — Maximum resale price enforced by contract
+- ✅ **Automatic Refunds** — Grace period and cancellation logic
+- ✅ **Access Control** — Role-based permissions for organizers
+
+---
+
+## 📱 Pages & Features
+
+### 🏠 Landing Page (`/about`)
+- Animated hero section with Ken Burns effect
+- Interactive "How It Works" slider
+- Value proposition highlights
+
+### 🎪 Events Marketplace (`/events`) 
+- Animated cyan hero section
+- Event cards with real-time data
+- Filtering and search functionality
+
+### 🎫 My Tickets (`/my-tickets`)
+- Owned tickets display
+- QR code generation
+- Transfer and resale options
+
+### 👨‍💼 Organizer Dashboard (`/organizer`)
+- Event creation wizard
+- Registration management
+- Check-in interface
+- Revenue analytics
+
+---
+
+## 🛠️ Development Scripts
+
+```bash
+# Frontend
+pnpm dev          # Start development server
+pnpm build        # Build for production
+pnpm start        # Start production server
+pnpm lint         # Run ESLint
+pnpm type-check   # Run TypeScript checks
+
+# Smart Contracts
+cd smart-contract
+npm run compile   # Compile contracts
+npm run deploy    # Deploy to network
+npm run verify    # Verify on block explorer
+```
+
+---
+
+## 🎨 Design System
+
+### Colors
+- **Primary**: Cyan (#00bcd4)
+- **Secondary**: Deep Purple (#673ab7) 
+- **Success**: Green (#4caf50)
+- **Warning**: Orange (#ff9800)
+- **Error**: Red (#f44336)
+
+### Typography
+- **Headings**: Inter (Bold/SemiBold)
+- **Body**: Inter (Regular/Medium)
+- **Code**: JetBrains Mono
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in project settings
+3. Deploy automatically on every push to main
+
+### Manual Deployment
+
+```bash
+# Build the application
+pnpm build
+
+# Deploy to your preferred hosting platform
+# (Netlify, AWS, Google Cloud, etc.)
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] **Email Integration** — Ticket delivery via email
+- [ ] **Analytics Dashboard** — Advanced organizer insights  
+- [ ] **Mobile App** — Native iOS/Android applications
+- [ ] **API Documentation** — Public API for third-party integrations
+- [ ] **Batch Operations** — Bulk ticket management tools
+
+---
+
+## 📊 Stats
+
+<div align="center">
+
+![GitHub stars](https://img.shields.io/github/stars/yourusername/evvnt?style=social)
+![GitHub forks](https://img.shields.io/github/forks/yourusername/evvnt?style=social)
+![GitHub issues](https://img.shields.io/github/issues/yourusername/evvnt)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/evvnt)
+
+</div>
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Thanks to the Somnia Network for testnet support
+- Inspired by the Web3 community's vision for transparency
+
+---
+
+<div align="center">
+
+**[⬆ Back to Top](#-evvnt--transparent-web3-ticketing-platform)**
+
+Made with ❤ for the decentralized future
+
+</div>
