@@ -1,6 +1,6 @@
 # 🎫 Evvnt — Transparent Web3 Ticketing Platform
 
-contract address : 0xc8966abd81cab4d2f683449912ca72ac0057ad48
+# contract address -— 0xc8966abd81cab4d2f683449912ca72ac0057ad48
 
 <div align="center">
 
