@@ -1,5 +1,7 @@
 # 🎫 Evvnt — Transparent Web3 Ticketing Platform
 
+contract address : 0xc8966abd81cab4d2f683449912ca72ac0057ad48
+
 <div align="center">
 
 
@@ -117,7 +119,8 @@ Create `fe/.env.local`:
 # Network Configuration
 NEXT_PUBLIC_CHAIN_ID=50312
 NEXT_PUBLIC_TICKET_ADDRESS=0xc8966abd81cab4d2f683449912ca72ac0057ad48
-NEXT_PUBLIC_RPC_URL=https://somnia-testnet-rpc.example.com
+NEXT_PUBLIC_RPC_URL=https://dream-rpc.somnia.network
+
 
 # IPFS Configuration (Server-side only)
 PINATA_JWT=your_pinata_jwt_token_here
